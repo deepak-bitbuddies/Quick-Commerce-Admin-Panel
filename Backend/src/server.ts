@@ -1,8 +1,8 @@
-import { env } from "./config/env.js"
-import { connectDatabase, disconnectDatabase } from "./config/db.js"
-import { redis } from "./config/redis.js"
+import { env } from "./core/config/env.js"
+import { connectDatabase, disconnectDatabase } from "./core/database/db.js"
+// import { redis } from "./core/cache/redis.js" // disabled until Redis is set up locally
 import { buildApp } from "./app.js"
-import { logger } from "./utils/logger.js"
+import { logger } from "./core/logger/logger.js"
 
 // Socket.io (real-time rider tracking) and BullMQ queues (notifications,
 // invoices, audit logs) are deferred along with the order/rider domains
@@ -22,7 +22,7 @@ async function main(): Promise<void> {
     logger.info({ signal }, "Shutting down gracefully")
     try {
       await fastify.close()
-      await Promise.all([disconnectDatabase(), redis.quit()])
+      await Promise.all([disconnectDatabase()]) // redis.quit() disabled along with the redis import above
       process.exit(0)
     } catch (err) {
       logger.error({ err }, "Error during shutdown")

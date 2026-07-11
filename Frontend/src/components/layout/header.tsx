@@ -5,8 +5,7 @@ import { ListIcon, XIcon } from "@phosphor-icons/react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { ThemeToggle } from "@/components/theme-toggle"
-import { LanguageSwitcher } from "@/components/language-switcher"
+import { ThemeToggle, LanguageSwitcher } from "@/components/common"
 
 interface HeaderProps {
   sidebarOpen: boolean

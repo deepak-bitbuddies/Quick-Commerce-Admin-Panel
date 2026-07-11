@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server"
 
-import { ComingSoon } from "@/components/coming-soon"
+import { ComingSoon } from "@/components/feedback"
 
 export default async function OrdersPage() {
   const t = await getTranslations("Nav")

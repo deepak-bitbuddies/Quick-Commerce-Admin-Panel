@@ -132,5 +132,82 @@
       "priceInvalid": "Price must be a positive number.",
       "categoryRequired": "Please select or enter a category."
     }
+  },
+  "Brands": {
+    "pageTitle": "Brands",
+    "pageDescription": "Manage the brands available across your catalog.",
+    "createBrand": "Create Brand",
+
+    "searchLabel": "Search brands",
+    "searchPlaceholder": "Search brands by name...",
+    "statusFilterLabel": "Status: {status}",
+    "statusAll": "All",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+
+    "columnName": "Name",
+    "columnDescription": "Description",
+    "columnStatus": "Status",
+    "columnCreatedAt": "Created",
+    "columnActions": "Actions",
+    "noDescription": "No description",
+    "rowActionsLabel": "Actions for {name}",
+    "edit": "Edit",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "retry": "Retry",
+    "clearFilters": "Clear filters",
+
+    "loadErrorTitle": "Couldn't load brands",
+    "loadErrorDescription": "Something went wrong while loading brands.",
+    "networkErrorTitle": "Couldn't connect",
+    "networkErrorDescription": "Check your connection and try again.",
+    "permissionErrorTitle": "You don't have access",
+    "permissionErrorDescription": "You need super admin permissions to view brands.",
+    "emptyStateTitle": "No brands yet",
+    "emptyStateDescription": "Create your first brand to get started.",
+    "noResultsTitle": "No brands found",
+    "noResultsDescription": "No brands match your search or filters.",
+    "resultsSummary": "Showing {from}–{to} of {total}",
+    "pageOf": "Page {page} of {totalPages}",
+
+    "createBrandTitle": "Create Brand",
+    "createBrandDescription": "Add a new brand to your catalog.",
+    "editBrandTitle": "Edit Brand",
+    "editBrandDescription": "Update this brand's details.",
+    "nameLabel": "Brand name",
+    "namePlaceholder": "e.g. Nestle",
+    "logoLabel": "Logo URL",
+    "logoPlaceholder": "https://example.com/logo.png",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "A short description of this brand",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "saveChanges": "Save changes",
+
+    "createSuccessTitle": "Brand created",
+    "createSuccessDescription": "{name} was added successfully.",
+    "createErrorTitle": "Could not create brand",
+    "updateSuccessTitle": "Brand updated",
+    "updateSuccessDescription": "{name} was updated successfully.",
+    "updateErrorTitle": "Could not update brand",
+
+    "activateBrandTitle": "Activate {name}?",
+    "activateBrandDescription": "This will make the brand visible again and allow its products to be sold.",
+    "deactivateBrandTitle": "Deactivate {name}?",
+    "deactivateBrandDescription": "This will hide the brand and pause its products until reactivated.",
+    "activateSuccessTitle": "Brand activated",
+    "activateSuccessDescription": "{name} is now active.",
+    "activateErrorTitle": "Could not activate brand",
+    "deactivateSuccessTitle": "Brand deactivated",
+    "deactivateSuccessDescription": "{name} is now inactive.",
+    "deactivateErrorTitle": "Could not deactivate brand",
+
+    "validation": {
+      "nameRequired": "Brand name must be at least 2 characters.",
+      "nameTooLong": "Brand name must be 120 characters or fewer.",
+      "logoInvalid": "Enter a valid logo URL (starting with http:// or https://).",
+      "descriptionTooLong": "Description must be 500 characters or fewer."
+    }
   }
 }

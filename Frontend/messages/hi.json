@@ -132,5 +132,82 @@
       "priceInvalid": "कीमत एक सकारात्मक संख्या होनी चाहिए।",
       "categoryRequired": "कृपया एक श्रेणी चुनें या दर्ज करें।"
     }
+  },
+  "Brands": {
+    "pageTitle": "ब्रांड्स",
+    "pageDescription": "अपने कैटलॉग में उपलब्ध ब्रांड्स प्रबंधित करें।",
+    "createBrand": "ब्रांड बनाएं",
+
+    "searchLabel": "ब्रांड खोजें",
+    "searchPlaceholder": "नाम से ब्रांड खोजें...",
+    "statusFilterLabel": "स्थिति: {status}",
+    "statusAll": "सभी",
+    "statusActive": "सक्रिय",
+    "statusInactive": "निष्क्रिय",
+
+    "columnName": "नाम",
+    "columnDescription": "विवरण",
+    "columnStatus": "स्थिति",
+    "columnCreatedAt": "बनाया गया",
+    "columnActions": "कार्रवाइयां",
+    "noDescription": "कोई विवरण नहीं",
+    "rowActionsLabel": "{name} के लिए कार्रवाइयां",
+    "edit": "संपादित करें",
+    "activate": "सक्रिय करें",
+    "deactivate": "निष्क्रिय करें",
+    "retry": "पुनः प्रयास करें",
+    "clearFilters": "फ़िल्टर साफ़ करें",
+
+    "loadErrorTitle": "ब्रांड्स लोड नहीं हो सके",
+    "loadErrorDescription": "ब्रांड्स लोड करते समय कुछ गलत हो गया।",
+    "networkErrorTitle": "कनेक्ट नहीं हो सका",
+    "networkErrorDescription": "अपना कनेक्शन जांचें और पुनः प्रयास करें।",
+    "permissionErrorTitle": "आपके पास पहुंच नहीं है",
+    "permissionErrorDescription": "ब्रांड्स देखने के लिए आपको सुपर एडमिन अनुमति चाहिए।",
+    "emptyStateTitle": "अभी तक कोई ब्रांड नहीं",
+    "emptyStateDescription": "शुरू करने के लिए अपना पहला ब्रांड बनाएं।",
+    "noResultsTitle": "कोई ब्रांड नहीं मिला",
+    "noResultsDescription": "आपकी खोज या फ़िल्टर से कोई ब्रांड मेल नहीं खाता।",
+    "resultsSummary": "{total} में से {from}–{to} दिखा रहे हैं",
+    "pageOf": "पृष्ठ {page} / {totalPages}",
+
+    "createBrandTitle": "ब्रांड बनाएं",
+    "createBrandDescription": "अपने कैटलॉग में एक नया ब्रांड जोड़ें।",
+    "editBrandTitle": "ब्रांड संपादित करें",
+    "editBrandDescription": "इस ब्रांड का विवरण अपडेट करें।",
+    "nameLabel": "ब्रांड का नाम",
+    "namePlaceholder": "जैसे Nestle",
+    "logoLabel": "लोगो URL",
+    "logoPlaceholder": "https://example.com/logo.png",
+    "descriptionLabel": "विवरण",
+    "descriptionPlaceholder": "इस ब्रांड का संक्षिप्त विवरण",
+    "cancel": "रद्द करें",
+    "saving": "सहेजा जा रहा है...",
+    "saveChanges": "परिवर्तन सहेजें",
+
+    "createSuccessTitle": "ब्रांड बनाया गया",
+    "createSuccessDescription": "{name} सफलतापूर्वक जोड़ा गया।",
+    "createErrorTitle": "ब्रांड नहीं बन सका",
+    "updateSuccessTitle": "ब्रांड अपडेट किया गया",
+    "updateSuccessDescription": "{name} सफलतापूर्वक अपडेट किया गया।",
+    "updateErrorTitle": "ब्रांड अपडेट नहीं हो सका",
+
+    "activateBrandTitle": "{name} को सक्रिय करें?",
+    "activateBrandDescription": "इससे ब्रांड फिर से दिखाई देगा और इसके उत्पाद बेचे जा सकेंगे।",
+    "deactivateBrandTitle": "{name} को निष्क्रिय करें?",
+    "deactivateBrandDescription": "इससे ब्रांड छिप जाएगा और पुनः सक्रिय होने तक इसके उत्पाद रुक जाएंगे।",
+    "activateSuccessTitle": "ब्रांड सक्रिय किया गया",
+    "activateSuccessDescription": "{name} अब सक्रिय है।",
+    "activateErrorTitle": "ब्रांड सक्रिय नहीं हो सका",
+    "deactivateSuccessTitle": "ब्रांड निष्क्रिय किया गया",
+    "deactivateSuccessDescription": "{name} अब निष्क्रिय है।",
+    "deactivateErrorTitle": "ब्रांड निष्क्रिय नहीं हो सका",
+
+    "validation": {
+      "nameRequired": "ब्रांड का नाम कम से कम 2 अक्षर का होना चाहिए।",
+      "nameTooLong": "ब्रांड का नाम 120 अक्षरों से अधिक नहीं होना चाहिए।",
+      "logoInvalid": "एक मान्य लोगो URL दर्ज करें (http:// या https:// से शुरू)।",
+      "descriptionTooLong": "विवरण 500 अक्षरों से अधिक नहीं होना चाहिए।"
+    }
   }
 }

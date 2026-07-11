@@ -3,8 +3,7 @@ import { Figtree, Geist_Mono } from "next/font/google"
 import { NextIntlClientProvider } from "next-intl"
 import { getLocale } from "next-intl/server"
 
-import { Providers } from "@/components/providers"
-import { AuthStoreProvider } from "@/components/auth-provider"
+import { AppProviders, AuthStoreProvider } from "@/providers"
 import { getSession } from "@/lib/auth/session"
 import "./globals.css"
 
@@ -40,11 +39,11 @@ export default async function RootLayout({
     >
       <body className="min-h-full bg-background text-foreground">
         <NextIntlClientProvider>
-          <Providers>
+          <AppProviders>
             <AuthStoreProvider initialUser={user}>
               {children}
             </AuthStoreProvider>
-          </Providers>
+          </AppProviders>
         </NextIntlClientProvider>
       </body>
     </html>

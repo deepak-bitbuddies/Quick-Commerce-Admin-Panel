@@ -1,4 +1,4 @@
-import { ComingSoon } from "@/components/coming-soon"
+import { ComingSoon } from "@/components/feedback"
 
 function titleFromSlug(slug: string[]) {
   return slug[slug.length - 1]

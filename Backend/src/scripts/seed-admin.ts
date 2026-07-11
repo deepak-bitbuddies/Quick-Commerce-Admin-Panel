@@ -9,12 +9,11 @@
  */
 import { hash } from "bcryptjs"
 
-import { connectDatabase, disconnectDatabase } from "../config/db.js"
-import { findUserByEmail, createUser } from "../repositories/user.repository.js"
-import { UserRole } from "../types/enums/index.js"
-import { logger } from "../utils/logger.js"
-
-const BCRYPT_SALT_ROUNDS = 10
+import { connectDatabase, disconnectDatabase } from "../core/database/db.js"
+import { findUserByEmail, createUser } from "../api/v1/admin/users/index.js"
+import { UserRole } from "../shared/enums/index.js"
+import { BCRYPT_SALT_ROUNDS } from "../shared/constants/auth.constants.js"
+import { logger } from "../core/logger/logger.js"
 
 async function main(): Promise<void> {
   const name = process.env.SEED_ADMIN_NAME ?? "Super Admin"

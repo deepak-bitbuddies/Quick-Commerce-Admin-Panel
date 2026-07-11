@@ -15,8 +15,8 @@ import {
 } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/components/auth-provider";
-import { logout } from "@/services/auth";
+import { useAuthStore } from "@/providers";
+import { logout } from "@/modules/auth";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,

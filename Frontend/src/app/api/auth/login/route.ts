@@ -6,11 +6,13 @@ import {
   SESSION_COOKIE,
   SESSION_COOKIE_MAX_AGE,
 } from "@/lib/auth/constants"
+import { BackendRoute } from "@/constants"
+import type { BackendEnvelope } from "@/lib/backend"
 import type { AuthUser } from "@/store/auth-store"
 
 const BACKEND_API_URL = process.env.BACKEND_API_URL ?? "http://localhost:4000"
 
-interface BackendLoginResponse {
+interface LoginResponseData {
   token: string
   user: AuthUser
 }
@@ -29,7 +31,7 @@ export async function POST(request: Request) {
 
   let backendResponse: Response
   try {
-    backendResponse = await fetch(`${BACKEND_API_URL}/api/v1/auth/login`, {
+    backendResponse = await fetch(`${BACKEND_API_URL}${BackendRoute.AuthLogin}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -52,7 +54,8 @@ export async function POST(request: Request) {
     )
   }
 
-  const { token, user } = (await backendResponse.json()) as BackendLoginResponse
+  const { data } = (await backendResponse.json()) as BackendEnvelope<LoginResponseData>
+  const { token, user } = data!
 
   const store = await cookies()
   const cookieOptions = {
