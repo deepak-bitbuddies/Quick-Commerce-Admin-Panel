@@ -1,7 +1,7 @@
 import type { FastifyRequest } from "fastify"
 
 import { ForbiddenError, UnauthorizedError } from "../../shared/errors/index.js"
-import type { UserRole } from "../../shared/enums/index.js"
+import { SystemRoleCode } from "../../shared/enums/index.js"
 
 /**
  * Verifies the bearer JWT and attaches the decoded payload to
@@ -21,12 +21,12 @@ export async function requireAuth(request: FastifyRequest): Promise<void> {
  *
  * @example
  * fastify.get("/admin/settlements", {
- *   preHandler: [requireAuth, requireRole("super_admin")],
+ *   preHandler: [requireAuth, requireRole(SystemRoleCode.SUPER_ADMIN)],
  * }, handler)
  */
-export function requireRole(...roles: UserRole[]) {
+export function requireRole(...roles: SystemRoleCode[]) {
   return async function roleGuard(request: FastifyRequest): Promise<void> {
-    if (!roles.includes(request.user.role)) {
+    if (!roles.includes(request.user.role as SystemRoleCode)) {
       throw new ForbiddenError("Insufficient permissions")
     }
   }

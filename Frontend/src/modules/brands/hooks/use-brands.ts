@@ -8,6 +8,10 @@ import {
   getBrands,
   updateBrand,
   updateBrandStatus,
+  deleteBrand,
+  restoreBrand,
+  bulkDeleteBrands,
+  bulkStatusUpdateBrands,
 } from "../api/brands-api"
 import { brandsQueryKeys } from "../constants/query-keys"
 import type {
@@ -16,6 +20,7 @@ import type {
   CreateBrandInput,
   UpdateBrandInput,
   UpdateBrandStatusInput,
+  BrandStatus,
 } from "../types/brand"
 
 /**
@@ -74,6 +79,50 @@ export function useUpdateBrandStatusMutation() {
       brandId: string
       input: UpdateBrandStatusInput
     }) => updateBrandStatus(brandId, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: brandsQueryKeys.lists() })
+    },
+  })
+}
+
+export function useDeleteBrandMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ brandId, reason }: { brandId: string; reason?: string }) => deleteBrand(brandId, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: brandsQueryKeys.lists() })
+    },
+  })
+}
+
+export function useRestoreBrandMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (brandId: string) => restoreBrand(brandId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: brandsQueryKeys.lists() })
+    },
+  })
+}
+
+export function useBulkDeleteBrandsMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ ids, reason }: { ids: string[]; reason?: string }) => bulkDeleteBrands(ids, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: brandsQueryKeys.lists() })
+    },
+  })
+}
+
+export function useBulkStatusBrandsMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ ids, status }: { ids: string[]; status: BrandStatus }) => bulkStatusUpdateBrands(ids, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: brandsQueryKeys.lists() })
     },

@@ -57,3 +57,29 @@ export async function updateBrandStatus(
   )
   return data.data
 }
+
+export async function deleteBrand(brandId: string, reason?: string): Promise<Brand> {
+  const { data } = await api.delete<{ data: Brand }>(`/brands/${brandId}`, {
+    params: { reason },
+  })
+  return data.data
+}
+
+export async function restoreBrand(brandId: string): Promise<Brand> {
+  const { data } = await api.post<{ data: Brand }>(`/brands/${brandId}/restore`)
+  return data.data
+}
+
+export async function bulkDeleteBrands(
+  ids: string[],
+  reason?: string
+): Promise<void> {
+  await api.post("/brands/bulk-delete", { ids, reason })
+}
+
+export async function bulkStatusUpdateBrands(
+  ids: string[],
+  status: string
+): Promise<void> {
+  await api.post("/brands/bulk-status", { ids, status })
+}

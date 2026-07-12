@@ -7,10 +7,10 @@ import {
   setUserStatusHandler,
 } from "./controller.js"
 import { requireAuth, requireRole } from "../../../../core/auth/guards.js"
-import { UserRole } from "../../../../shared/enums/index.js"
+import { SystemRoleCode } from "../../../../shared/enums/index.js"
 
 export async function usersRoutes(fastify: FastifyInstance): Promise<void> {
-  const guard = [requireAuth, requireRole(UserRole.SUPER_ADMIN)]
+  const guard = [requireAuth, requireRole(SystemRoleCode.SUPER_ADMIN)]
 
   fastify.post("/users", { preHandler: guard }, createUserHandler)
   fastify.get("/users", { preHandler: guard }, listUsersHandler)

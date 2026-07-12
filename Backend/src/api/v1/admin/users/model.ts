@@ -1,6 +1,5 @@
 import { Schema, model, type InferSchemaType } from "mongoose"
 
-import { UserRole } from "../../../../shared/enums/index.js"
 import type { WithId } from "../../../../shared/types/mongoose-helpers.js"
 
 const userSchema = new Schema(
@@ -17,7 +16,6 @@ const userSchema = new Schema(
     passwordHash: { type: String, required: true, select: false },
     role: {
       type: String,
-      enum: Object.values(UserRole),
       required: true,
       index: true,
     },

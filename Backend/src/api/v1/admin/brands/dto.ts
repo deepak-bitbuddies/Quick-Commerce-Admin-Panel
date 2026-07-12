@@ -19,5 +19,12 @@ export interface BrandResponseDto {
   logo?: string
   description?: string
   status: BrandStatus
+  // Delete/restore is orthogonal to status (see repository.ts) — the UI
+  // needs isDeleted directly to know when a row is only reachable via the
+  // `deleted=true` list view and should show Restore instead of Edit/
+  // Delete/Activate/Deactivate.
+  isDeleted: boolean
+  deletedAt?: Date
+  deletedReason?: string
   createdAt: Date
 }

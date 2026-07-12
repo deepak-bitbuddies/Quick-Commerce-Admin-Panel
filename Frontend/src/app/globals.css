@@ -159,8 +159,55 @@
   }
   body {
     @apply bg-background text-foreground;
+    cursor: default;
   }
   html {
     @apply font-sans;
+  }
+
+  /* Global Cursor Pointer Standard */
+  a,
+  button,
+  select,
+  summary,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  input[type="checkbox"],
+  input[type="radio"],
+  [role="button"],
+  [role="link"],
+  [role="checkbox"],
+  [role="menuitem"],
+  [role="tab"],
+  [role="radio"],
+  [role="switch"],
+  [role="option"] {
+    cursor: pointer;
+  }
+
+  /* Disabled state cursors */
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  textarea:disabled,
+  [disabled],
+  [aria-disabled="true"],
+  [data-disabled] {
+    cursor: not-allowed !important;
+  }
+
+  /* Text inputs cursor */
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="number"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  input:not([type]),
+  textarea,
+  [contenteditable="true"] {
+    cursor: text;
   }
 }

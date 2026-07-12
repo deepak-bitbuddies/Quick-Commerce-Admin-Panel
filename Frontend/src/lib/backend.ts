@@ -33,10 +33,14 @@ async function fetchBackendEnvelope<T>(
 ): Promise<BackendEnvelope<T>> {
   const token = await getAccessToken()
 
+  const method = init.method?.toUpperCase() ?? "GET"
+  const hasBody = init.body !== undefined
+  const shouldSetContentType = hasBody || !["GET", "DELETE", "HEAD", "OPTIONS"].includes(method)
+
   const response = await fetch(`${BACKEND_API_URL}${path}`, {
     ...init,
     headers: {
-      "Content-Type": "application/json",
+      ...(shouldSetContentType ? { "Content-Type": "application/json" } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...init.headers,
     },

@@ -2,6 +2,8 @@ import { z } from "zod"
 
 import { BrandStatus } from "./enums.js"
 
+const statusSchema = z.enum([BrandStatus.ACTIVE, BrandStatus.INACTIVE])
+
 export const createBrandSchema = z.object({
   name: z.string().min(1),
   logo: z.string().url().optional(),
@@ -24,7 +26,12 @@ export const listBrandsQuerySchema = z.object({
   // repository.ts's listBrands — see the escaping there for the matching
   // ReDoS mitigation (Security review finding).
   search: z.string().min(1).max(100).optional(),
-  status: z.enum([BrandStatus.ACTIVE, BrandStatus.INACTIVE]).optional(),
+  status: statusSchema.optional(),
+  // Default (omitted/false) view excludes soft-deleted brands, as before.
+  // `deleted=true` flips to showing ONLY soft-deleted brands — this is the
+  // one and only way a deleted brand becomes visible/restorable, since
+  // Restore has no other path to reach a row.
+  deleted: z.coerce.boolean().optional(),
   page: z.coerce.number().int().positive().optional(),
   pageSize: z.coerce.number().int().positive().max(100).optional(),
 })
@@ -38,5 +45,15 @@ export const brandIdParamsSchema = z.object({
 })
 
 export const setStatusBodySchema = z.object({
-  status: z.enum([BrandStatus.ACTIVE, BrandStatus.INACTIVE]),
+  status: statusSchema,
+})
+
+export const bulkDeleteSchema = z.object({
+  ids: z.array(z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid brand id")),
+  reason: z.string().optional(),
+})
+
+export const bulkStatusSchema = z.object({
+  ids: z.array(z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid brand id")),
+  status: statusSchema,
 })

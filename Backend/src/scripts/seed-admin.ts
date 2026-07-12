@@ -11,7 +11,7 @@ import { hash } from "bcryptjs"
 
 import { connectDatabase, disconnectDatabase } from "../core/database/db.js"
 import { findUserByEmail, createUser } from "../api/v1/admin/users/index.js"
-import { UserRole } from "../shared/enums/index.js"
+import { seedRoles } from "../api/v1/admin/roles/index.js"
 import { BCRYPT_SALT_ROUNDS } from "../shared/constants/auth.constants.js"
 import { logger } from "../core/logger/logger.js"
 
@@ -23,9 +23,25 @@ async function main(): Promise<void> {
 
   await connectDatabase()
 
+  const codeToIdMap = await seedRoles()
+  const superAdminRoleId = codeToIdMap["super_admin"]
+
+  if (!superAdminRoleId) {
+    throw new Error("[seed-admin] super_admin role GUID not found in seeded roles")
+  }
+
   const existing = await findUserByEmail(email)
   if (existing) {
-    logger.info({ email }, "[seed-admin] a user with this email already exists, skipping")
+    if (existing.role !== superAdminRoleId) {
+      const { UserModel } = await import("../api/v1/admin/users/model.js")
+      await UserModel.updateOne({ _id: existing._id }, { role: superAdminRoleId })
+      logger.info(
+        { email, oldRole: existing.role, newRole: superAdminRoleId },
+        "[seed-admin] updated existing admin user's role to seeded super_admin role GUID"
+      )
+    } else {
+      logger.info({ email }, "[seed-admin] a user with this email already exists and has the correct role GUID, skipping")
+    }
     await disconnectDatabase()
     return
   }
@@ -36,7 +52,7 @@ async function main(): Promise<void> {
     email,
     phone,
     passwordHash,
-    role: UserRole.SUPER_ADMIN,
+    role: superAdminRoleId,
   })
 
   logger.info({ email }, "[seed-admin] super_admin account created")

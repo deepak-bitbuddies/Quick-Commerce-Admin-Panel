@@ -15,7 +15,7 @@ import {
 } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/providers";
+import { useAuthStore, usePlatformConfig } from "@/providers";
 import { logout } from "@/modules/auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -259,6 +259,8 @@ export function Sidebar({
   const isDesktop = useMediaQuery(SIDEBAR_DESKTOP_BREAKPOINT);
   const iconRail = collapsed && isDesktop;
   const setUser = useAuthStore((state) => state.setUser);
+  const { config } = usePlatformConfig();
+  const displayName = config?.branding?.platformDisplayName || "Quick Commerce";
 
   const { mutate: performLogout } = useMutation({
     mutationFn: logout,
@@ -317,12 +319,23 @@ export function Sidebar({
         >
           <Link
             href="/"
-            className={cn(
-              "truncate font-semibold",
-              collapsibleLabelClassName(collapsed),
-            )}
+            className="flex items-center gap-2.5 truncate font-semibold"
           >
-            Departmental Store
+            {config?.branding?.admin?.lightLogo ? (
+              <img
+                src={config.branding.admin.lightLogo}
+                alt={displayName}
+                className="size-6 shrink-0 object-contain rounded-full"
+              />
+            ) : null}
+            <span
+              className={cn(
+                "truncate transition-opacity duration-200 ease-in-out",
+                collapsibleLabelClassName(collapsed)
+              )}
+            >
+              {displayName}
+            </span>
           </Link>
           <Button
             variant="ghost"

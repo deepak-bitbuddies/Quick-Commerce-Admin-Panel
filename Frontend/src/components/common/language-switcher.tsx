@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { setLocale } from "@/i18n/actions"
 import { locales, type AppLocale } from "@/i18n/locales"
+import { usePlatformConfig } from "@/providers/platform-config-provider"
 
 const LOCALE_LABELS: Record<AppLocale, string> = {
   en: "English",
@@ -22,6 +23,15 @@ const LOCALE_LABELS: Record<AppLocale, string> = {
 export function LanguageSwitcher({ label }: { label: string }) {
   const locale = useLocale()
   const [isPending, startTransition] = useTransition()
+  const { config } = usePlatformConfig()
+
+  const availableLocales = config?.localization?.availability && config.localization.availability.length > 0
+    ? (config.localization.availability.filter((loc) => locales.includes(loc as AppLocale)) as AppLocale[])
+    : locales
+
+  if (availableLocales.length <= 1) {
+    return null
+  }
 
   return (
     <DropdownMenu>
@@ -39,7 +49,7 @@ export function LanguageSwitcher({ label }: { label: string }) {
         }
       />
       <DropdownMenuContent align="end">
-        {locales.map((loc) => (
+        {availableLocales.map((loc) => (
           <DropdownMenuItem
             key={loc}
             data-variant={loc === locale ? "default" : undefined}

@@ -19,7 +19,7 @@ export async function LoginPage() {
       <CardHeader>
         <div className="mb-2 flex items-center gap-2 font-semibold">
           <StorefrontIcon weight="fill" className="size-5 text-primary" />
-          Quick Commerce
+          Rahi Store
         </div>
         <CardTitle>{t("title")}</CardTitle>
         <CardDescription>{t("subtitle")}</CardDescription>

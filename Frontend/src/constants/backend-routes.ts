@@ -8,6 +8,8 @@ export enum BackendRoute {
   AuthLogin = "/api/v1/auth/login",
   AdminUsers = "/api/v1/admin/users",
   AdminBrands = "/api/v1/admin/brands",
+  AdminSettings = "/api/v1/admin/settings",
+  PlatformConfig = "/api/v1/platform-config",
 }
 
 export function adminUserRoute(userId: string): string {
@@ -24,4 +26,8 @@ export function adminBrandRoute(brandId: string): string {
 
 export function adminBrandStatusRoute(brandId: string): string {
   return `/api/v1/admin/brands/${brandId}/status`
+}
+
+export function adminSettingsGroupRoute(groupId: string): string {
+  return `/api/v1/admin/settings/${groupId}`
 }

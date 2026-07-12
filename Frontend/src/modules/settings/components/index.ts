@@ -1,0 +1,6 @@
+export { GeneralForm } from "./general-form"
+export { BrandingForm } from "./branding-form"
+export { LocalizationForm } from "./localization-form"
+export { RegionalForm } from "./regional-form"
+export { CustomerAppForm } from "./customer-app-form"
+export { ClientApplicationsForm } from "./client-applications-form"

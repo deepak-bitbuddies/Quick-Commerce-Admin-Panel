@@ -208,3 +208,39 @@ Never parse this envelope by hand in feature code. Two helpers already do it:
   can't use `backendFetch` (no token yet) — import the shared
   `BackendEnvelope<T>` type from `@/lib/backend` rather than declaring a new
   inline shape, per rule 24 (reuse before duplicating).
+
+---
+
+## Standardized CRUD Infrastructure
+
+Every business CRUD listing module must inherit these capabilities to guarantee uniform UX and behavior:
+
+1. **Server-Side Pagination**:
+   - Must use the shared `<Pagination />` component.
+   - Display page size options (10, 20, 50, 100), record count summary, and routing synchronization.
+   - Default page size: `DEFAULT_PAGE_SIZE = 10` (Centralized).
+
+2. **Unified Entity Lifecycle**:
+   - Master modules must implement `ACTIVE`, `INACTIVE`, and `ARCHIVED` statuses.
+   - Record deletions must be non-destructive Soft Deletes. Require deletion reason logs.
+   - Archived records cannot be assigned to new documents, but remain available for historical reference. They can be restored to active.
+
+3. **Managed Filters**:
+   - Must use the shared `<FilterBar />` component.
+   - Standard filters: Search string (debounced), Status dropdown (Active, Inactive, Archived), and Created/Updated Date ranges.
+   - Reset the page number to 1 on filter or search parameter change.
+
+4. **Bulk Actions Toolbar**:
+   - Must use the shared `<BulkActionsToolbar />` component.
+   - Support checkboxes, row selections, selection counts, clear selection, and confirmation overlays.
+   - Actions: Activate, Deactivate, Archive, Restore, Delete (Soft).
+
+5. **Shared CRUD Components**:
+   - `<DataTable />`
+   - `<Pagination />`
+   - `<FilterBar />`
+   - `<BulkActionsToolbar />`
+   - `<DeleteConfirmationDialog />`
+   - `<ArchiveConfirmationDialog />`
+   - `<ConfirmationDialog />`
+

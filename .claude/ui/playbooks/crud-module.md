@@ -97,10 +97,9 @@ them:
 └─────────────────────────────────────────────────────────┘
 ```
 
-- Page header title is the plural entity name (e.g. "Sellers"), an `h1`.
-  The primary action is a single `Button` with `<PlusIcon />` + "Create
-  {Entity}" text, top-right, `variant="default"`. Never icon-only at desktop
-  width.
+- Page header is implemented using the shared `PageHeader` component from `@/components/layout/page-header`.
+  It renders the title (an `h1` by default), description, optional breadcrumbs, and standard action buttons (primary/secondary).
+  The primary action is a single action config with `<PlusIcon />` + "Create {Entity}" text. Never icon-only at desktop width.
 - The search/filter bar sits directly under the header, outside the Card
   that holds the table — it is chrome around the data, not part of it.
 - The table itself lives inside a `Card` (the same `Card` primitive
@@ -147,16 +146,15 @@ form; on mutation success, close the dialog, `toast.success`, and
 
 **Delete / status-change confirmation:**
 
-Always an `AlertDialog`, triggered from a `DropdownMenuItem`
-(`variant="destructive"` for delete; default variant for
-deactivate/activate) — never a bare click that fires the mutation directly.
+Always confirmation via the shared `ConfirmationDialog` component from `@/components/feedback` (which wraps `AlertDialog`), triggered from a `DropdownMenuItem`
+(`variant="destructive"` for delete; default variant for deactivate/activate) — never a bare click that fires the mutation directly.
 This matches the real `admin/users` shape: `setUserStatusHandler` takes a
 boolean `isActive` body, so for entities that mirror `admin/users` (most of
 them — riders, sellers, customers, staff accounts) the row action is
 **"Deactivate" / "Activate"**, not "Delete" — there is no destroy endpoint
 in that shape. Only label the action "Delete" when the module's backend
 contract genuinely exposes a hard-delete endpoint; otherwise "Deactivate"
-with the `AlertDialog` body explaining the reversible, soft-state nature of
+with the confirmation explaining the reversible, soft-state nature of
 the action (contrast copy: delete confirmations should say what's
 irreversible, deactivate confirmations should say what stops working).
 
@@ -186,12 +184,13 @@ rule 12):
 
 ## Recommended Components
 
+- `PageHeader` (shared) from `@/components/layout/page-header` — standard page header component for title, description, breadcrumbs, and actions.
+- `ConfirmationDialog` (shared) from `@/components/feedback` — standard confirmation wrapper for deletes and status changes.
 - `Table` (new install) wrapped by a shared `components/tables/data-table.tsx`
   per `data-table.md` — the list view never imports raw `<table>` markup or
   the shadcn primitives directly.
 - `Dialog` (new install) for the dialog-shell create/edit case.
-- `AlertDialog` (new install) for delete/status-change confirmation only —
-  never repurpose it as a generic modal.
+- `AlertDialog` (new install) for low-level dialog needs (reused internally by `ConfirmationDialog`).
 - `Badge` (new install) for status display (`isActive` → "Active"/"Inactive",
   role, etc.) — always paired with text, see Accessibility.
 - `Skeleton` (new install) for list and detail loading states.
@@ -202,14 +201,14 @@ rule 12):
 - `Button` variants already defined in `button.tsx`: `default` for the
   primary Create action, `outline` for secondary dialog actions (Cancel),
   `ghost` + `size="icon"`/`"icon-sm"` for the row's DropdownMenu trigger,
-  `destructive` for the AlertDialog's confirm button on true deletes.
+  `destructive` for confirm buttons on true deletes.
 - `Field` / `FieldGroup` / `FieldSet` / `FieldError` (already installed) for
   all form fields — per `form.md`.
 - Phosphor icons (`@phosphor-icons/react`): `PlusIcon` (create),
   `MagnifyingGlassIcon` (search input), `FunnelIcon` (filter trigger),
   `DotsThreeIcon` (row action trigger — icon-only, matches `data-table.md`), `PencilSimpleIcon`
   (edit), `PowerIcon` (activate/deactivate), `TrashIcon` (true delete only),
-  `CircleNotchIcon` with `animate-spin` (all loading spinners, matching
+  `CircleNotch` with `animate-spin` (all loading spinners, matching
   `login-form.tsx`/`product-form.tsx` exactly).
 
 ## Interaction Patterns

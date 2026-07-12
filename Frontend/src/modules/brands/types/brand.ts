@@ -1,11 +1,10 @@
 /**
  * Mirrors the confirmed live contract of `Backend`'s
- * `/api/v1/admin/brands` router (`super_admin`-only). Note the response
- * field is `logo`, not `logoUrl`.
+ * `/api/v1/admin/brands` router (`super_admin`-only).
  */
-export type BrandStatus = "active" | "inactive"
+export type BrandStatus = "ACTIVE" | "INACTIVE"
 
-export const BRAND_STATUSES: BrandStatus[] = ["active", "inactive"]
+export const BRAND_STATUSES: BrandStatus[] = ["ACTIVE", "INACTIVE"]
 
 export interface Brand {
   id: string
@@ -13,6 +12,12 @@ export interface Brand {
   logo?: string
   description?: string
   status: BrandStatus
+  // Delete/restore is orthogonal to status — a brand can be soft-deleted
+  // regardless of its ACTIVE/INACTIVE value. Only present when the list was
+  // fetched with `deleted: true` (see BrandListParams) — the default view
+  // never returns deleted brands at all.
+  isDeleted?: boolean
+  deletedReason?: string
   createdAt: string
 }
 
@@ -24,9 +29,6 @@ export interface CreateBrandInput {
 
 export interface UpdateBrandInput {
   name?: string
-  // `null` explicitly clears the field on the backend; `undefined` (key
-  // omitted) leaves it untouched — see brand-form.tsx's edit-mode submit
-  // handler, which is the only place that needs to send `null`.
   logo?: string | null
   description?: string | null
 }
@@ -40,6 +42,9 @@ export interface BrandListParams {
   pageSize?: number
   search?: string
   status?: BrandStatus
+  // true -> only soft-deleted brands (the "deleted" view, for Restore).
+  // Omitted/false -> the default view, which never includes deleted brands.
+  deleted?: boolean
 }
 
 export interface BrandListMeta {

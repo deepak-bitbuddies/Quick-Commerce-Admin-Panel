@@ -3,8 +3,6 @@ import type { IconProps } from "@phosphor-icons/react"
 import {
   BellIcon,
   BellRingingIcon,
-  BuildingsIcon,
-  ChartBarIcon,
   ClockIcon,
   CubeIcon,
   ArrowUUpLeftIcon,
@@ -12,16 +10,13 @@ import {
   GearIcon,
   HouseIcon,
   MapTrifoldIcon,
-  MegaphoneIcon,
   MotorcycleIcon,
   PackageIcon,
   QuestionIcon,
   ReceiptIcon,
-  ShieldCheckIcon,
   SparkleIcon,
   SquaresFourIcon,
   StarIcon,
-  StorefrontIcon,
   TicketIcon,
   TruckIcon,
   UsersIcon,
@@ -51,7 +46,7 @@ export const navGroups: NavGroup[] = [
     headingKey: "overview",
     items: [
       { labelKey: "dashboard", href: "/", icon: HouseIcon },
-      { labelKey: "posDashboard", href: "/pos-dashboard", icon: ChartBarIcon },
+      // { labelKey: "posDashboard", href: "/pos-dashboard", icon: ChartBarIcon },
       { labelKey: "orders", href: "/orders", icon: CubeIcon },
       {
         labelKey: "returnRequests",
@@ -68,11 +63,7 @@ export const navGroups: NavGroup[] = [
   {
     headingKey: "catalog",
     items: [
-      {
-        labelKey: "categories",
-        icon: SquaresFourIcon,
-        items: [{ labelKey: "categories", href: "/categories" }],
-      },
+      { labelKey: "categories", href: "/categories", icon: SquaresFourIcon },
       {
         labelKey: "products",
         icon: PackageIcon,
@@ -114,30 +105,30 @@ export const navGroups: NavGroup[] = [
           },
         ],
       },
-      {
-        labelKey: "sellerManagement",
-        icon: StorefrontIcon,
-        items: [
-          { labelKey: "sellers", href: "/sellers" },
-          {
-            labelKey: "settlementOverview",
-            href: "/sellers/settlement-overview",
-          },
-          { labelKey: "sellerWithdrawals", href: "/sellers/withdrawals" },
-          {
-            labelKey: "sellerWithdrawalHistory",
-            href: "/sellers/withdrawal-history",
-          },
-        ],
-      },
-      {
-        labelKey: "stores",
-        icon: BuildingsIcon,
-        items: [
-          { labelKey: "stores", href: "/stores" },
-          { labelKey: "storeReviews", href: "/stores/reviews" },
-        ],
-      },
+      // {
+      //   labelKey: "sellerManagement",
+      //   icon: StorefrontIcon,
+      //   items: [
+      //     { labelKey: "sellers", href: "/sellers" },
+      //     {
+      //       labelKey: "settlementOverview",
+      //       href: "/sellers/settlement-overview",
+      //     },
+      //     { labelKey: "sellerWithdrawals", href: "/sellers/withdrawals" },
+      //     {
+      //       labelKey: "sellerWithdrawalHistory",
+      //       href: "/sellers/withdrawal-history",
+      //     },
+      //   ],
+      // },
+      // {
+      //   labelKey: "stores",
+      //   icon: BuildingsIcon,
+      //   items: [
+      //     { labelKey: "stores", href: "/stores" },
+      //     { labelKey: "storeReviews", href: "/stores/reviews" },
+      //   ],
+      // },
       {
         labelKey: "manageDeliveryBoys",
         icon: MotorcycleIcon,
@@ -190,22 +181,22 @@ export const navGroups: NavGroup[] = [
         icon: StarIcon,
       },
       { labelKey: "promos", href: "/promos", icon: TicketIcon },
-      {
-        labelKey: "adCampaigns",
-        icon: MegaphoneIcon,
-        items: [
-          { labelKey: "adCampaignsDashboard", href: "/ad-campaigns" },
-          { labelKey: "adCampaigns", href: "/ad-campaigns/campaigns" },
-          {
-            labelKey: "adWalletSellers",
-            href: "/ad-campaigns/wallet-sellers",
-          },
-          {
-            labelKey: "adPendingWalletDeposits",
-            href: "/ad-campaigns/pending-wallet-deposits",
-          },
-        ],
-      },
+      // {
+      //   labelKey: "adCampaigns",
+      //   icon: MegaphoneIcon,
+      //   items: [
+      //     { labelKey: "adCampaignsDashboard", href: "/ad-campaigns" },
+      //     { labelKey: "adCampaigns", href: "/ad-campaigns/campaigns" },
+      //     {
+      //       labelKey: "adWalletSellers",
+      //       href: "/ad-campaigns/wallet-sellers",
+      //     },
+      //     {
+      //       labelKey: "adPendingWalletDeposits",
+      //       href: "/ad-campaigns/pending-wallet-deposits",
+      //     },
+      //   ],
+      // },
     ],
   },
   {
@@ -235,14 +226,14 @@ export const navGroups: NavGroup[] = [
   {
     headingKey: "system",
     items: [
-      {
-        labelKey: "rolesAndPermissions",
-        icon: ShieldCheckIcon,
-        items: [
-          { labelKey: "roles", href: "/roles" },
-          { labelKey: "systemUsers", href: "/system-users" },
-        ],
-      },
+      // {
+      //   labelKey: "rolesAndPermissions",
+      //   icon: ShieldCheckIcon,
+      //   items: [
+      //     { labelKey: "roles", href: "/roles" },
+      //     { labelKey: "systemUsers", href: "/system-users" },
+      //   ],
+      // },
       {
         labelKey: "settings",
         icon: GearIcon,
@@ -268,12 +259,12 @@ export const navGroups: NavGroup[] = [
             labelKey: "deliveryBoySettings",
             href: "/settings/delivery-boy",
           },
-          { labelKey: "sellerSettings", href: "/settings/seller" },
-          {
-            labelKey: "advertisementSettings",
-            href: "/settings/advertisement",
-          },
-          { labelKey: "posSettings", href: "/settings/pos" },
+          // { labelKey: "sellerSettings", href: "/settings/seller" },
+          // {
+          //   labelKey: "advertisementSettings",
+          //   href: "/settings/advertisement",
+          // },
+          // { labelKey: "posSettings", href: "/settings/pos" },
         ],
       },
       { labelKey: "cronMonitor", href: "/cron-monitor", icon: ClockIcon },

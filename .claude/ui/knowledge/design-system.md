@@ -287,6 +287,20 @@ not a one-off hardcoded color.
 
 ---
 
+## Cursor Pointer Standard
+
+Interactive elements across the application automatically use the correct cursor via centralized base styling rules in `Frontend/src/app/globals.css`. Developers must **never** manually add inline cursor classes (e.g. `cursor-pointer`, `cursor-not-allowed`) to interactive or disabled states.
+
+Centralized styling rules applied globally:
+- **Interactive Elements** (`a`, `button`, `select`, `summary`, `[role="button"]`, `[role="link"]`, `[role="tab"]`, `[role="menuitem"]`, `[role="switch"]`, checkbox/radio inputs): `cursor: pointer`
+- **Disabled State** (`:disabled`, `[disabled]`, `[aria-disabled="true"]`, `[data-disabled]`): `cursor: not-allowed !important`
+- **Text Inputs** (`input[type="text"]`, `input[type="password"]`, `input[type="email"]`, `input[type="number"]`, `input[type="search"]`, `textarea`, `[contenteditable="true"]`): `cursor: text`
+- **Non-Interactive Elements** (headings, body, divs, spans): `cursor: default` (inherited from body)
+
+When building custom interactive components (like clickable cards), always add semantic accessibility attributes such as `role="button"` or `role="link"` to inherit the pointer cursor automatically.
+
+---
+
 ## Usage Rules
 
 1. **Never hardcode a color.** No hex literal (`#f59e0b`), no raw Tailwind

@@ -1,9 +1,6 @@
 export { BrandsListPage } from "./pages/brands-list-page"
 
-export { BrandsToolbar, type BrandStatusFilter } from "./components/brands-toolbar"
-export { BrandsTable, BrandsCardList } from "./components/brands-table"
 export { BrandFormDialog } from "./components/brand-form"
-export { BrandStatusAlertDialog } from "./components/brand-status-alert-dialog"
 
 export {
   getBrands,
@@ -18,6 +15,10 @@ export {
   useCreateBrandMutation,
   useUpdateBrandMutation,
   useUpdateBrandStatusMutation,
+  useDeleteBrandMutation,
+  useRestoreBrandMutation,
+  useBulkDeleteBrandsMutation,
+  useBulkStatusBrandsMutation,
 } from "./hooks/use-brands"
 
 export { brandsQueryKeys } from "./constants/query-keys"

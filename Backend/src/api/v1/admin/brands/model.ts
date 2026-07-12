@@ -24,6 +24,12 @@ const brandSchema = new Schema(
       required: true,
       index: true,
     },
+    isDeleted: { type: Boolean, default: false, required: true, index: true },
+    deletedAt: { type: Date },
+    deletedBy: { type: String },
+    deletedReason: { type: String },
+    createdBy: { type: String },
+    updatedBy: { type: String },
   },
   { timestamps: true },
 )

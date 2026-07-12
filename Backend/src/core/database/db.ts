@@ -2,6 +2,7 @@ import mongoose from "mongoose"
 
 import { env } from "../config/env.js"
 import { logger } from "../logger/logger.js"
+import { seedRoles } from "../../api/v1/admin/roles/index.js"
 
 mongoose.set("strictQuery", true)
 
@@ -19,6 +20,12 @@ export async function connectDatabase(): Promise<void> {
     minPoolSize: 5,
     serverSelectionTimeoutMS: 5000,
   })
+
+  try {
+    await seedRoles()
+  } catch (err) {
+    logger.error({ err }, "[mongo] failed to seed system roles")
+  }
 }
 
 export async function disconnectDatabase(): Promise<void> {

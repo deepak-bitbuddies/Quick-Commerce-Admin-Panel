@@ -1,6 +1,8 @@
-export const UserRole = {
+export const SystemRoleCode = {
   SUPER_ADMIN: "super_admin",
-  RIDER: "rider",
   CUSTOMER: "customer",
+  DELIVERY_BOY: "delivery_boy",
 } as const
-export type UserRole = (typeof UserRole)[keyof typeof UserRole]
+export type SystemRoleCode = (typeof SystemRoleCode)[keyof typeof SystemRoleCode]
+
+export type UserRole = string
