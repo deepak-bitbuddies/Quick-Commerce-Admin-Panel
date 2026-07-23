@@ -493,12 +493,12 @@ export function ProductsListPage() {
       {/* Summary Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[
-          { title: "Total Products", value: stats?.totalProducts ?? 0, color: "text-zinc-900 dark:text-zinc-50" },
-          { title: "Active Products", value: stats?.activeProducts ?? 0, color: "text-emerald-600 dark:text-emerald-400" },
-          { title: "Inactive Products", value: stats?.inactiveProducts ?? 0, color: "text-amber-600 dark:text-amber-400" },
-          { title: "Draft Products", value: stats?.draftProducts ?? 0, color: "text-blue-600 dark:text-blue-400" },
-          { title: "Out of Stock", value: stats?.outOfStock ?? 0, color: "text-rose-600 dark:text-rose-400" },
-          { title: "Low Stock", value: stats?.lowStock ?? 0, color: "text-red-500 font-bold" },
+          { title: "Total Products", value: stats?.totalProducts ?? 0, color: "text-zinc-900 dark:text-zinc-50", onClick: undefined, isClickable: false },
+          { title: "Active Products", value: stats?.activeProducts ?? 0, color: "text-emerald-600 dark:text-emerald-400", onClick: undefined, isClickable: false },
+          { title: "Inactive Products", value: stats?.inactiveProducts ?? 0, color: "text-amber-600 dark:text-amber-400", onClick: undefined, isClickable: false },
+          { title: "Draft Products", value: stats?.draftProducts ?? 0, color: "text-blue-600 dark:text-blue-400", onClick: undefined, isClickable: false },
+          { title: "Out of Stock", value: stats?.outOfStock ?? 0, color: "text-rose-600 dark:text-rose-400", onClick: undefined, isClickable: false },
+          { title: "Low Stock", value: stats?.lowStock ?? 0, color: "text-red-500 font-bold", onClick: undefined, isClickable: false },
         ].map((c) => (
           <Card 
             key={c.title} 
