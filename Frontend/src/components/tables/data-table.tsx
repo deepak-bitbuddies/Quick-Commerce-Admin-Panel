@@ -1,7 +1,7 @@
 "use client"
 
-import { ReactNode } from "react"
-import { ListIcon } from "@phosphor-icons/react"
+import { ReactNode, useState, Fragment } from "react"
+import { ListIcon, CaretRightIcon } from "@phosphor-icons/react"
 import {
   Table,
   TableBody,
@@ -29,6 +29,9 @@ interface DataTableProps<T> {
   onSelectAll?: (checked: boolean) => void
   getRowId?: (row: T) => string
   
+  // Collapsible detail subrow
+  renderSubRow?: (row: T) => ReactNode
+  
   // Custom Empty/Loading
   emptyTitle?: string
   emptyDescription?: string
@@ -43,12 +46,23 @@ export function DataTable<T>({
   onSelectRow,
   onSelectAll,
   getRowId,
+  renderSubRow,
   emptyTitle = "No Results Found",
   emptyDescription = "There are no records matching your active filters.",
   loadingRowCount = 5,
 }: DataTableProps<T>) {
   const showCheckbox = Boolean(onSelectRow && onSelectAll && getRowId)
-  const totalCols = columns.length + (showCheckbox ? 1 : 0)
+  const totalCols = columns.length + (showCheckbox ? 1 : 0) + (renderSubRow ? 1 : 0)
+
+  // Track expanded rows by ID
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({})
+
+  const toggleRow = (rowId: string) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [rowId]: !prev[rowId],
+    }))
+  }
 
   const handleSelectAllChange = (checked: boolean) => {
     if (onSelectAll) {
@@ -60,6 +74,7 @@ export function DataTable<T>({
     <Table>
       <TableHeader>
         <TableRow>
+          {renderSubRow && <TableHead className="w-10" />}
           {showCheckbox && (
             <TableHead className="w-10">
               <input
@@ -100,28 +115,51 @@ export function DataTable<T>({
           data.map((row, rIdx) => {
             const rowId = getRowId ? getRowId(row) : String(rIdx)
             const isSelected = selectedIds.includes(rowId)
+            const isExpanded = expandedRows[rowId] ?? false
 
             return (
-              <TableRow
-                key={rowId}
-                className={isSelected ? "bg-zinc-50/50 dark:bg-zinc-900/50" : ""}
-              >
-                {showCheckbox && (
-                  <TableCell>
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={(e) => onSelectRow && onSelectRow(rowId, e.target.checked)}
-                      className="size-3.5 accent-primary cursor-pointer rounded"
-                    />
-                  </TableCell>
+              <Fragment key={rowId}>
+                <TableRow
+                  className={isSelected ? "bg-zinc-50/50 dark:bg-zinc-900/50" : ""}
+                >
+                  {renderSubRow && (
+                    <TableCell className="w-10">
+                      <button
+                        type="button"
+                        onClick={() => toggleRow(rowId)}
+                        className="size-6 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center cursor-pointer transition-all"
+                        style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}
+                      >
+                        <CaretRightIcon className="size-3.5 text-zinc-500" />
+                      </button>
+                    </TableCell>
+                  )}
+                  {showCheckbox && (
+                    <TableCell>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => onSelectRow && onSelectRow(rowId, e.target.checked)}
+                        className="size-3.5 accent-primary cursor-pointer rounded"
+                      />
+                    </TableCell>
+                  )}
+                  {columns.map((col, cIdx) => (
+                    <TableCell key={cIdx} className={col.className}>
+                      {col.accessor(row, rIdx)}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {renderSubRow && isExpanded && (
+                  <TableRow className="bg-zinc-50/30 dark:bg-zinc-950/20 hover:bg-zinc-50/30 dark:hover:bg-zinc-950/20 border-t-0">
+                    <TableCell colSpan={totalCols} className="p-0">
+                      <div className="px-6 py-4 border-b border-dashed border-zinc-200 dark:border-zinc-800">
+                        {renderSubRow(row)}
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 )}
-                {columns.map((col, cIdx) => (
-                  <TableCell key={cIdx} className={col.className}>
-                    {col.accessor(row, rIdx)}
-                  </TableCell>
-                ))}
-              </TableRow>
+              </Fragment>
             )
           })
         )}

@@ -1,8 +1,5 @@
-import { getTranslations } from "next-intl/server"
+import { ProductsListPage } from "@/modules/products/pages/products-list-page"
 
-import { ComingSoon } from "@/components/feedback"
-
-export default async function ProductsPage() {
-  const t = await getTranslations("Nav")
-  return <ComingSoon title={t("products")} />
+export default function ProductsPage() {
+  return <ProductsListPage />
 }
