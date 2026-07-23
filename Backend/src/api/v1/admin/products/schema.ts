@@ -171,6 +171,7 @@ export const listProductsQuerySchema = z.object({
   search: z.string().max(100).optional(),
   sortBy: z.string().optional(),
   sortOrder: z.enum(["asc", "desc"]).optional(),
+  showArchived: z.preprocess((val) => val === "true" || val === true, z.boolean()).optional(),
 })
 
 export const productIdParamsSchema = z.object({

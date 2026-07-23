@@ -188,9 +188,6 @@ export default function TaxRatesDashboardPage() {
           handleFilterChange({ search: val || null })
         }}
         searchPlaceholder="Search tax rates by name..."
-        status="all"
-        onStatusChange={() => {}}
-        statusOptions={[]}
         hasActiveFilters={Boolean(searchParam)}
         onClearAll={() => {
           router.push(pathname)

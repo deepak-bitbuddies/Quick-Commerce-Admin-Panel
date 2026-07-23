@@ -6,6 +6,8 @@ import {
   getProductHandler,
   updateProductHandler,
   deleteProductHandler,
+  restoreProductHandler,
+  permanentlyDeleteProductHandler,
   duplicateProductHandler,
   addVariantHandler,
   updateVariantHandler,
@@ -49,6 +51,8 @@ export async function adminProductsRoutes(fastify: FastifyInstance): Promise<voi
   fastify.get("/products/:productId", { preHandler: guard }, getProductHandler)
   fastify.patch("/products/:productId", { preHandler: guard }, updateProductHandler)
   fastify.delete("/products/:productId", { preHandler: guard }, deleteProductHandler)
+  fastify.post("/products/:productId/restore", { preHandler: guard }, restoreProductHandler)
+  fastify.delete("/products/:productId/permanent", { preHandler: guard }, permanentlyDeleteProductHandler)
   fastify.post("/products/sync-stock", { preHandler: guard }, syncStockHandler)
 
   // Product FAQs & Reviews (Individual Product)

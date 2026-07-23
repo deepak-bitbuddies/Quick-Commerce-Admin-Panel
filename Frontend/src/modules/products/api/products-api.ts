@@ -255,3 +255,11 @@ export async function getProductStats(): Promise<ProductStats> {
   const { data } = await api.get<{ data: ProductStats }>("/products/stats")
   return data.data
 }
+
+export async function restoreProduct(productId: string): Promise<void> {
+  await api.post(`/products/${productId}/restore`)
+}
+
+export async function permanentlyDeleteProduct(productId: string): Promise<void> {
+  await api.delete(`/products/${productId}/permanent`)
+}

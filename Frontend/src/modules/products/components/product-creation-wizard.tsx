@@ -16,9 +16,9 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
+import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import { useCreateProductMutation, useBadgesQuery } from "../hooks/use-products"
 import { useCategoriesQuery } from "@/modules/categories/hooks/use-categories"
 import { useBrandsQuery } from "@/modules/brands/hooks/use-brands"
@@ -92,6 +92,14 @@ export function ProductCreationWizard() {
   const formValues = watch()
   const variantsValues = watch("variants")
 
+  const getErrorMessage = (error: any) => {
+    return error?.message as string | undefined
+  }
+
+  const getVariantError = (index: number, fieldName: string) => {
+    return (errors.variants as any)?.[index]?.[fieldName]?.message as string | undefined
+  }
+
   // Auto-generate SKUs when name, unit, or unit value changes in variants
   React.useEffect(() => {
     variantsValues.forEach((v: any, index: number) => {
@@ -150,36 +158,7 @@ export function ProductCreationWizard() {
 
     const isValid = await trigger(fieldsToValidate)
     if (isValid) {
-      // Custom variant price validity checks on step 3
-      if (currentStep === 3) {
-        for (let i = 0; i < variantsValues.length; i++) {
-          const v = variantsValues[i]
-          const mrpVal = parseFloat(v.mrp) || 0
-          const sellingVal = parseFloat(v.sellingPrice) || 0
-          const offerVal = parseFloat(v.offerPrice) || 0
-
-          if (!v.sku) {
-            toast.error(`Variant SKU is required for item #${i + 1}`)
-            return
-          }
-          if (mrpVal <= 0 || sellingVal <= 0) {
-            toast.error(`Pricing values must be positive numbers for variant #${i + 1}`)
-            return
-          }
-          if (mrpVal < sellingVal) {
-            toast.error(`MRP cannot be less than Selling Price for variant #${i + 1}`)
-            return
-          }
-          if (v.offerPrice && sellingVal < offerVal) {
-            toast.error(`Selling Price cannot be less than Offer Price for variant #${i + 1}`)
-            return
-          }
-        }
-      }
-
       setCurrentStep((prev) => prev + 1)
-    } else {
-      toast.error("Please fill in all required fields correctly before proceeding.")
     }
   }
 
@@ -294,116 +273,136 @@ export function ProductCreationWizard() {
             <div className="space-y-4 animate-in fade-in duration-200">
               <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Step 1: Product Basic Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5 col-span-2">
-                  <Label htmlFor="name" className="text-xs font-bold">Product Name *</Label>
-                  <Input id="name" placeholder="e.g. Fresh Organic Milk" {...register("name", { required: true })} />
+                <div className="col-span-2">
+                  <Field data-invalid={!!errors.name}>
+                    <FieldLabel htmlFor="name">Product Name *</FieldLabel>
+                    <Input id="name" placeholder="e.g. Fresh Organic Milk" {...register("name", { required: "Product Name is required" })} />
+                    <FieldError errors={[{ message: getErrorMessage(errors.name) }]} />
+                  </Field>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="categoryId" className="text-xs font-bold">Category *</Label>
-                  <select
-                    id="categoryId"
-                    {...register("categoryId", { required: true })}
-                    className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
-                  >
-                    <option value="">Select Category...</option>
-                    {categoriesData?.nodes.map((c: any) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="subCategoryId" className="text-xs font-bold">Sub Category (Optional)</Label>
-                  <select
-                    id="subCategoryId"
-                    {...register("subCategoryId")}
-                    className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
-                  >
-                    <option value="">Select Sub Category...</option>
-                    {categoriesData?.nodes
-                      .filter((c: any) => c.parentId === watch("categoryId") && watch("categoryId") !== "")
-                      .map((c: any) => (
+                <div>
+                  <Field data-invalid={!!errors.categoryId}>
+                    <FieldLabel htmlFor="categoryId">Category *</FieldLabel>
+                    <select
+                      id="categoryId"
+                      {...register("categoryId", { required: "Category is required" })}
+                      className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
+                    >
+                      <option value="">Select Category...</option>
+                      {categoriesData?.nodes.map((c: any) => (
                         <option key={c.id} value={c.id}>
                           {c.name}
                         </option>
                       ))}
-                  </select>
+                    </select>
+                    <FieldError errors={[{ message: getErrorMessage(errors.categoryId) }]} />
+                  </Field>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="brandId" className="text-xs font-bold">Brand *</Label>
-                  <select
-                    id="brandId"
-                    {...register("brandId", { required: true })}
-                    className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
-                  >
-                    <option value="">Select Brand...</option>
-                    {brandsData?.brands.map((b: any) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name}
-                      </option>
-                    ))}
-                  </select>
+                <div>
+                  <Field>
+                    <FieldLabel htmlFor="subCategoryId">Sub Category (Optional)</FieldLabel>
+                    <select
+                      id="subCategoryId"
+                      {...register("subCategoryId")}
+                      className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
+                    >
+                      <option value="">Select Sub Category...</option>
+                      {categoriesData?.nodes
+                        .filter((c: any) => c.parentId === watch("categoryId") && watch("categoryId") !== "")
+                        .map((c: any) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
+                    </select>
+                  </Field>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="taxId" className="text-xs font-bold">Tax Rate Class *</Label>
-                  <select
-                    id="taxId"
-                    {...register("taxId", { required: true })}
-                    className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
-                  >
-                    <option value="">Select Tax Rate...</option>
-                    {taxRatesData?.nodes.map((t: any) => (
-                      <option key={t.id} value={t.id}>
-                        {t.name} ({t.igst}%)
-                      </option>
-                    ))}
-                  </select>
+                <div>
+                  <Field data-invalid={!!errors.brandId}>
+                    <FieldLabel htmlFor="brandId">Brand *</FieldLabel>
+                    <select
+                      id="brandId"
+                      {...register("brandId", { required: "Brand is required" })}
+                      className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
+                    >
+                      <option value="">Select Brand...</option>
+                      {brandsData?.brands.map((b: any) => (
+                        <option key={b.id} value={b.id}>
+                          {b.name}
+                        </option>
+                      ))}
+                    </select>
+                    <FieldError errors={[{ message: getErrorMessage(errors.brandId) }]} />
+                  </Field>
                 </div>
 
-                <div className="space-y-1.5 col-span-2">
-                  <Label className="text-xs font-bold">Product Badges</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 border rounded-lg bg-zinc-50 dark:bg-zinc-900/50">
-                    {badgesData?.badges.map((badge: any) => (
-                      <label key={badge.id} className="flex items-center gap-2 cursor-pointer text-xs font-semibold select-none">
-                        <input
-                          type="checkbox"
-                          value={badge.id}
-                          className="rounded text-amber-500 focus:ring-amber-500"
-                          onChange={(e) => {
-                            const checked = e.target.checked
-                            const current = formValues.badgeIds || []
-                            if (checked) {
-                              setValue("badgeIds", [...current, badge.id])
-                            } else {
-                              setValue("badgeIds", current.filter((id: string) => id !== badge.id))
-                            }
-                          }}
-                          checked={(formValues.badgeIds || []).includes(badge.id)}
-                        />
-                        <span
-                          className="px-1.5 py-0.2 rounded text-[10px] uppercase font-extrabold"
-                          style={{ backgroundColor: badge.color, color: badge.textColor }}
-                        >
-                          {badge.name}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
+                <div>
+                  <Field data-invalid={!!errors.taxId}>
+                    <FieldLabel htmlFor="taxId">Tax Rate Class *</FieldLabel>
+                    <select
+                      id="taxId"
+                      {...register("taxId", { required: "Tax Rate Class is required" })}
+                      className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
+                    >
+                      <option value="">Select Tax Rate...</option>
+                      {taxRatesData?.nodes.map((t: any) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name} ({t.igst}%)
+                        </option>
+                      ))}
+                    </select>
+                    <FieldError errors={[{ message: getErrorMessage(errors.taxId) }]} />
+                  </Field>
                 </div>
 
-                <div className="space-y-1.5 col-span-2">
-                  <Label htmlFor="tagsInput" className="text-xs font-bold">Tags / Keywords (Comma-separated)</Label>
-                  <Input id="tagsInput" placeholder="organic, dairy, fresh, milk" {...register("tagsInput")} />
+                <div className="col-span-2">
+                  <Field>
+                    <FieldLabel>Product Badges</FieldLabel>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 border rounded-lg bg-zinc-50 dark:bg-zinc-900/50">
+                      {badgesData?.badges.map((badge: any) => (
+                        <label key={badge.id} className="flex items-center gap-2 cursor-pointer text-xs font-semibold select-none">
+                          <input
+                            type="checkbox"
+                            value={badge.id}
+                            className="rounded text-amber-500 focus:ring-amber-500"
+                            onChange={(e) => {
+                              const checked = e.target.checked
+                              const current = formValues.badgeIds || []
+                              if (checked) {
+                                setValue("badgeIds", [...current, badge.id])
+                              } else {
+                                setValue("badgeIds", current.filter((id: string) => id !== badge.id))
+                              }
+                            }}
+                            checked={(formValues.badgeIds || []).includes(badge.id)}
+                          />
+                          <span
+                            className="px-1.5 py-0.2 rounded text-[10px] uppercase font-extrabold"
+                            style={{ backgroundColor: badge.color, color: badge.textColor }}
+                          >
+                            {badge.name}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </Field>
                 </div>
 
-                <div className="space-y-1.5 col-span-2">
-                  <Label htmlFor="description" className="text-xs font-bold">Description</Label>
-                  <Textarea id="description" placeholder="Write descriptions..." {...register("description")} className="min-h-[120px]" />
+                <div className="col-span-2">
+                  <Field>
+                    <FieldLabel htmlFor="tagsInput">Tags / Keywords (Comma-separated)</FieldLabel>
+                    <Input id="tagsInput" placeholder="organic, dairy, fresh, milk" {...register("tagsInput")} />
+                  </Field>
+                </div>
+
+                <div className="col-span-2">
+                  <Field>
+                    <FieldLabel htmlFor="description">Description</FieldLabel>
+                    <Textarea id="description" placeholder="Write descriptions..." {...register("description")} className="min-h-[120px]" />
+                  </Field>
                 </div>
               </div>
             </div>
@@ -413,41 +412,46 @@ export function ProductCreationWizard() {
             <div className="space-y-4 animate-in fade-in duration-200">
               <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Step 2: Media visual assets</h2>
               <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="primaryImage" className="text-xs font-bold">Primary Image URL *</Label>
-                  <Input id="primaryImage" placeholder="https://example.com/image.jpg" {...register("primaryImage", { required: true })} />
-                  {formValues.primaryImage && formValues.primaryImage.startsWith("http") && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={formValues.primaryImage} alt="Primary Preview" className="size-32 rounded-lg border object-cover ring-1 ring-foreground/10" />
-                  )}
+                <div>
+                  <Field data-invalid={!!errors.primaryImage}>
+                    <FieldLabel htmlFor="primaryImage">Primary Image URL *</FieldLabel>
+                    <Input id="primaryImage" placeholder="https://example.com/image.jpg" {...register("primaryImage", { required: "Primary Image URL is required" })} />
+                    <FieldError errors={[{ message: getErrorMessage(errors.primaryImage) }]} />
+                    {formValues.primaryImage && formValues.primaryImage.startsWith("http") && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={formValues.primaryImage} alt="Primary Preview" className="size-32 rounded-lg border object-cover ring-1 ring-foreground/10" />
+                    )}
+                  </Field>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold">Gallery Images (Visual Assets)</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="https://example.com/gallery-image.jpg"
-                      value={newGalleryUrl}
-                      onChange={(e) => setNewGalleryUrl(e.target.value)}
-                    />
-                    <Button type="button" variant="secondary" onClick={handleAddGalleryUrl} className="cursor-pointer">Add</Button>
-                  </div>
+                <div>
+                  <Field>
+                    <FieldLabel>Gallery Images (Visual Assets)</FieldLabel>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="https://example.com/gallery-image.jpg"
+                        value={newGalleryUrl}
+                        onChange={(e) => setNewGalleryUrl(e.target.value)}
+                      />
+                      <Button type="button" variant="secondary" onClick={handleAddGalleryUrl} className="cursor-pointer">Add</Button>
+                    </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-2">
-                    {formValues.galleryImages?.map((url: string, index: number) => (
-                      <div key={index} className="relative group border rounded-lg overflow-hidden h-24">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={url} alt={`Gallery #${index}`} className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveGalleryUrl(index)}
-                          className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition shadow cursor-pointer hover:bg-red-700"
-                        >
-                          <TrashIcon className="size-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-2">
+                      {formValues.galleryImages?.map((url: string, index: number) => (
+                        <div key={index} className="relative group border rounded-lg overflow-hidden h-24">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={url} alt={`Gallery #${index}`} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveGalleryUrl(index)}
+                            className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition shadow cursor-pointer hover:bg-red-700"
+                          >
+                            <TrashIcon className="size-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </Field>
                 </div>
               </div>
             </div>
@@ -500,75 +504,121 @@ export function ProductCreationWizard() {
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                       <div>
-                        <Label className="text-xs font-bold mb-1 block">Unit Type</Label>
-                        <select
-                          {...register(`variants.${index}.unit`)}
-                          className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
-                        >
-                          <option value="gm">Grams (GM)</option>
-                          <option value="kg">Kilograms (KG)</option>
-                          <option value="litre">Litres (LITRE)</option>
-                          <option value="ml">Millilitres (ML)</option>
-                          <option value="pcs">Pieces (PCS)</option>
-                        </select>
+                        <Field>
+                          <FieldLabel className="mb-1 block">Unit Type</FieldLabel>
+                          <select
+                            {...register(`variants.${index}.unit`)}
+                            className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
+                          >
+                            <option value="gm">Grams (GM)</option>
+                            <option value="kg">Kilograms (KG)</option>
+                            <option value="litre">Litres (LITRE)</option>
+                            <option value="ml">Millilitres (ML)</option>
+                            <option value="pcs">Pieces (PCS)</option>
+                          </select>
+                        </Field>
                       </div>
 
                       <div>
-                        <Label className="text-xs font-bold mb-1 block">Unit Value</Label>
-                        <Input
-                          type="number"
-                          step="any"
-                          placeholder="e.g. 500 or 1"
-                          {...register(`variants.${index}.unitValue`, { required: true })}
-                        />
+                        <Field data-invalid={!!(errors.variants as any)?.[index]?.unitValue}>
+                          <FieldLabel className="mb-1 block">Unit Value</FieldLabel>
+                          <Input
+                            type="number"
+                            step="any"
+                            placeholder="e.g. 500 or 1"
+                            {...register(`variants.${index}.unitValue`, { required: "Unit Value is required" })}
+                          />
+                          <FieldError errors={[{ message: getVariantError(index, "unitValue") }]} />
+                        </Field>
                       </div>
 
                       <div className="col-span-2">
-                        <Label className="text-xs font-bold mb-1 block">SKU Code (Auto-Generated / Editable)</Label>
-                        <Input
-                          placeholder="SKU-CODE"
-                          {...register(`variants.${index}.sku`, { required: true })}
-                        />
+                        <Field data-invalid={!!(errors.variants as any)?.[index]?.sku}>
+                          <FieldLabel className="mb-1 block">SKU Code (Auto-Generated / Editable)</FieldLabel>
+                          <Input
+                            placeholder="SKU-CODE"
+                            {...register(`variants.${index}.sku`, { required: "Variant SKU is required" })}
+                          />
+                          <FieldError errors={[{ message: getVariantError(index, "sku") }]} />
+                        </Field>
                       </div>
 
                       <div>
-                        <Label className="text-xs font-bold mb-1 block">MRP (₹)</Label>
-                        <Input
-                          type="number"
-                          step="any"
-                          placeholder="0.00"
-                          {...register(`variants.${index}.mrp`, { required: true })}
-                        />
+                        <Field data-invalid={!!(errors.variants as any)?.[index]?.mrp}>
+                          <FieldLabel className="mb-1 block">MRP (₹)</FieldLabel>
+                          <Input
+                            type="number"
+                            step="any"
+                            placeholder="0.00"
+                            {...register(`variants.${index}.mrp`, {
+                              required: "MRP is required",
+                              validate: (val) => {
+                                const num = parseFloat(val)
+                                return isNaN(num) || num <= 0 ? "MRP must be positive" : true
+                              }
+                            })}
+                          />
+                          <FieldError errors={[{ message: getVariantError(index, "mrp") }]} />
+                        </Field>
                       </div>
 
                       <div>
-                        <Label className="text-xs font-bold mb-1 block">Selling Price (₹)</Label>
-                        <Input
-                          type="number"
-                          step="any"
-                          placeholder="0.00"
-                          {...register(`variants.${index}.sellingPrice`, { required: true })}
-                        />
+                        <Field data-invalid={!!(errors.variants as any)?.[index]?.sellingPrice}>
+                          <FieldLabel className="mb-1 block">Selling Price (₹)</FieldLabel>
+                          <Input
+                            type="number"
+                            step="any"
+                            placeholder="0.00"
+                            {...register(`variants.${index}.sellingPrice`, {
+                              required: "Selling Price is required",
+                              validate: {
+                                positive: (val) => {
+                                  const num = parseFloat(val)
+                                  return isNaN(num) || num <= 0 ? "Selling Price must be positive" : true
+                                },
+                                lessThanMRP: (val, formVals) => {
+                                  const sellingVal = parseFloat(val) || 0
+                                  const mrpVal = parseFloat(formVals.variants[index]?.mrp) || 0
+                                  return mrpVal >= sellingVal || "MRP cannot be less than Selling Price"
+                                }
+                              }
+                            })}
+                          />
+                          <FieldError errors={[{ message: getVariantError(index, "sellingPrice") }]} />
+                        </Field>
                       </div>
 
                       <div>
-                        <Label className="text-xs font-bold mb-1 block">Offer Price (Optional ₹)</Label>
-                        <Input
-                          type="number"
-                          step="any"
-                          placeholder="0.00"
-                          {...register(`variants.${index}.offerPrice`)}
-                        />
+                        <Field data-invalid={!!(errors.variants as any)?.[index]?.offerPrice}>
+                          <FieldLabel className="mb-1 block">Offer Price (Optional ₹)</FieldLabel>
+                          <Input
+                            type="number"
+                            step="any"
+                            placeholder="0.00"
+                            {...register(`variants.${index}.offerPrice`, {
+                              validate: (val, formVals) => {
+                                if (!val) return true
+                                const offerVal = parseFloat(val)
+                                if (isNaN(offerVal) || offerVal < 0) return "Offer Price must be positive"
+                                const sellingVal = parseFloat(formVals.variants[index]?.sellingPrice) || 0
+                                return sellingVal >= offerVal || "Selling Price cannot be less than Offer Price"
+                              }
+                            })}
+                          />
+                          <FieldError errors={[{ message: getVariantError(index, "offerPrice") }]} />
+                        </Field>
                       </div>
 
                       <div>
-                        <Label className="text-xs font-bold mb-1 block">Cost Price (₹)</Label>
-                        <Input
-                          type="number"
-                          step="any"
-                          placeholder="0.00"
-                          {...register(`variants.${index}.costPrice`)}
-                        />
+                        <Field>
+                          <FieldLabel className="mb-1 block">Cost Price (₹)</FieldLabel>
+                          <Input
+                            type="number"
+                            step="any"
+                            placeholder="0.00"
+                            {...register(`variants.${index}.costPrice`)}
+                          />
+                        </Field>
                       </div>
                     </div>
                   </div>
@@ -602,48 +652,58 @@ export function ProductCreationWizard() {
 
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                         <div>
-                          <Label className="text-xs font-bold mb-1 block">App Stock (Digital)</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            {...register(`variants.${index}.appStock`)}
-                          />
+                          <Field>
+                            <FieldLabel className="mb-1 block">App Stock (Digital)</FieldLabel>
+                            <Input
+                              type="number"
+                              min="0"
+                              {...register(`variants.${index}.appStock`)}
+                            />
+                          </Field>
                         </div>
 
                         <div>
-                          <Label className="text-xs font-bold mb-1 block">Local Stock (POS shelf)</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            {...register(`variants.${index}.localStock`)}
-                          />
+                          <Field>
+                            <FieldLabel className="mb-1 block">Local Stock (POS shelf)</FieldLabel>
+                            <Input
+                              type="number"
+                              min="0"
+                              {...register(`variants.${index}.localStock`)}
+                            />
+                          </Field>
                         </div>
 
                         <div>
-                          <Label className="text-xs font-bold mb-1 block">Reserved Stock (Hold)</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            {...register(`variants.${index}.reservedStock`)}
-                          />
+                          <Field>
+                            <FieldLabel className="mb-1 block">Reserved Stock (Hold)</FieldLabel>
+                            <Input
+                              type="number"
+                              min="0"
+                              {...register(`variants.${index}.reservedStock`)}
+                            />
+                          </Field>
                         </div>
 
                         <div>
-                          <Label className="text-xs font-bold mb-1 block">Minimum Stock</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            {...register(`variants.${index}.minStock`)}
-                          />
+                          <Field>
+                            <FieldLabel className="mb-1 block">Minimum Stock</FieldLabel>
+                            <Input
+                              type="number"
+                              min="0"
+                              {...register(`variants.${index}.minStock`)}
+                            />
+                          </Field>
                         </div>
 
                         <div>
-                          <Label className="text-xs font-bold mb-1 block">Reorder Level</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            {...register(`variants.${index}.reorderLevel`)}
-                          />
+                          <Field>
+                            <FieldLabel className="mb-1 block">Reorder Level</FieldLabel>
+                            <Input
+                              type="number"
+                              min="0"
+                              {...register(`variants.${index}.reorderLevel`)}
+                            />
+                          </Field>
                         </div>
                       </div>
                     </div>

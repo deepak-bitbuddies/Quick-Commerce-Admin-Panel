@@ -70,7 +70,6 @@ export const navGroups: NavGroup[] = [
         items: [
           { labelKey: "products", href: "/products" },
           { labelKey: "badges", href: "/products/badges" },
-          { labelKey: "inventory", href: "/products/inventory" },
         ],
       },
       { labelKey: "brands", href: "/brands", icon: SparkleIcon },

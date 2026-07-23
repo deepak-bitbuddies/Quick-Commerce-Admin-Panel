@@ -17,6 +17,10 @@ import {
   duplicateVariant as dbDuplicateVariant,
   createStockTransaction,
   findStockTransactionsByVariantId,
+  restoreProduct as dbRestoreProduct,
+  restoreVariantsByProductId,
+  permanentlyDeleteProduct as dbPermanentlyDeleteProduct,
+  permanentlyDeleteVariantsByProductId,
   type ListProductsFilters,
 } from "./repository.js"
 import {
@@ -277,7 +281,7 @@ export async function listProducts(filters: ListProductsFilters): Promise<Pagina
 
   const allVariants = await VariantModel.find({
     productId: { $in: productIds },
-    isDeleted: false,
+    isDeleted: filters.showArchived === true || filters.showArchived === "true",
   })
     .sort({ sortOrder: 1, mrp: 1 })
     .lean()
@@ -315,7 +319,7 @@ export async function getProductById(productId: string): Promise<ProductWithVari
     throw new NotFoundError(`Product with ID '${productId}' not found`)
   }
 
-  const variants = await findVariantsByProductId(productObjectId)
+  const variants = await findVariantsByProductId(productObjectId, product.isDeleted)
   return { product, variants }
 }
 
@@ -1048,4 +1052,38 @@ export async function getVariantById(variantId: string): Promise<VariantDocument
   }
 
   return variant
+}
+
+/**
+ * Restores/unarchives a product master record and all of its variants.
+ */
+export async function restoreProduct(productId: string): Promise<void> {
+  if (!Types.ObjectId.isValid(productId)) {
+    throw new ValidationError("Invalid product ID format")
+  }
+
+  const productObjectId = new Types.ObjectId(productId)
+  const success = await dbRestoreProduct(productObjectId)
+  if (!success) {
+    throw new NotFoundError(`Archived product with ID '${productId}' not found`)
+  }
+
+  await restoreVariantsByProductId(productObjectId)
+}
+
+/**
+ * Permanently deletes a product master record and all of its variants.
+ */
+export async function permanentlyDeleteProduct(productId: string): Promise<void> {
+  if (!Types.ObjectId.isValid(productId)) {
+    throw new ValidationError("Invalid product ID format")
+  }
+
+  const productObjectId = new Types.ObjectId(productId)
+  const success = await dbPermanentlyDeleteProduct(productObjectId)
+  if (!success) {
+    throw new NotFoundError(`Archived product with ID '${productId}' not found`)
+  }
+
+  await permanentlyDeleteVariantsByProductId(productObjectId)
 }
