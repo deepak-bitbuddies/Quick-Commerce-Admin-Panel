@@ -36,6 +36,8 @@ import {
   setBadgeStatus,
   restoreBadge,
   getProductStats,
+  restoreProduct,
+  permanentlyDeleteProduct,
 } from "../api/products-api"
 import { productsQueryKeys, badgesQueryKeys } from "../constants/query-keys"
 import type {
@@ -114,6 +116,30 @@ export function useDeleteProductMutation() {
       deleteProduct(productId, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productsQueryKeys.lists() })
+    },
+  })
+}
+
+export function useRestoreProductMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (productId: string) => restoreProduct(productId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: productsQueryKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: ["products", "stats"] })
+    },
+  })
+}
+
+export function usePermanentlyDeleteProductMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (productId: string) => permanentlyDeleteProduct(productId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: productsQueryKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: ["products", "stats"] })
     },
   })
 }

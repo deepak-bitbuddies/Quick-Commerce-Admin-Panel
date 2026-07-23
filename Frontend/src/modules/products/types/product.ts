@@ -64,6 +64,10 @@ export interface Product {
   updatedAt: string
   createdBy: string
   updatedBy: string
+  isDeleted?: boolean
+  deletedAt?: string
+  deletedBy?: string
+  deletedReason?: string
 }
 
 export interface CreateVariantInput {
@@ -157,6 +161,7 @@ export interface ProductListParams {
   search?: string
   sortBy?: string
   sortOrder?: "asc" | "desc"
+  showArchived?: boolean
 }
 
 export interface ProductListResult {
@@ -223,6 +228,7 @@ export interface ProductStats {
   draftProducts: number
   outOfStock: number
   lowStock: number
+  archivedProducts: number
 }
 
 export interface ProductBadge {

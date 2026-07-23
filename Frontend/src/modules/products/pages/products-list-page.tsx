@@ -135,6 +135,7 @@ export function ProductsListPage() {
     status: statusParam === "all" ? undefined : statusParam,
     categoryId: categoryParam === "all" ? undefined : categoryParam,
     brandId: brandParam === "all" ? undefined : brandParam,
+    showArchived: statusParam === "archived" ? true : undefined,
   }
   const { data, isLoading } = useProductsQuery(queryParams)
   
@@ -339,10 +340,6 @@ export function ProductsListPage() {
               <EyeIcon className="mr-2 size-4" />
               View details
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push(`/products/${p.id}?edit=true`)} className="cursor-pointer">
-              <PencilSimpleIcon className="mr-2 size-4" />
-              Edit product
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleDuplicateProduct(p)} className="cursor-pointer">
               <CopyIcon className="mr-2 size-4" />
               Duplicate product
@@ -363,6 +360,7 @@ export function ProductsListPage() {
     { label: "Active", value: "active" },
     { label: "Inactive", value: "inactive" },
     { label: "Draft", value: "draft" },
+    { label: "Archived", value: "archived" },
   ]
 
   const categoryOptions = [
@@ -495,14 +493,22 @@ export function ProductsListPage() {
       {/* Summary Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[
-          { title: "Total Products", value: stats?.totalProducts ?? 0, color: "text-zinc-900 dark:text-zinc-50" },
-          { title: "Active Products", value: stats?.activeProducts ?? 0, color: "text-emerald-600 dark:text-emerald-400" },
-          { title: "Inactive Products", value: stats?.inactiveProducts ?? 0, color: "text-amber-600 dark:text-amber-400" },
-          { title: "Draft Products", value: stats?.draftProducts ?? 0, color: "text-blue-600 dark:text-blue-400" },
-          { title: "Out of Stock", value: stats?.outOfStock ?? 0, color: "text-rose-600 dark:text-rose-400" },
-          { title: "Low Stock", value: stats?.lowStock ?? 0, color: "text-red-500 font-bold" },
+          { title: "Total Products", value: stats?.totalProducts ?? 0, color: "text-zinc-900 dark:text-zinc-50", onClick: undefined, isClickable: false },
+          { title: "Active Products", value: stats?.activeProducts ?? 0, color: "text-emerald-600 dark:text-emerald-400", onClick: undefined, isClickable: false },
+          { title: "Inactive Products", value: stats?.inactiveProducts ?? 0, color: "text-amber-600 dark:text-amber-400", onClick: undefined, isClickable: false },
+          { title: "Draft Products", value: stats?.draftProducts ?? 0, color: "text-blue-600 dark:text-blue-400", onClick: undefined, isClickable: false },
+          { title: "Out of Stock", value: stats?.outOfStock ?? 0, color: "text-rose-600 dark:text-rose-400", onClick: undefined, isClickable: false },
+          { title: "Low Stock", value: stats?.lowStock ?? 0, color: "text-red-500 font-bold", onClick: undefined, isClickable: false },
         ].map((c) => (
-          <Card key={c.title} className="p-4 shadow-sm border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex flex-col justify-between">
+          <Card 
+            key={c.title} 
+            onClick={c.onClick}
+            className={`p-4 shadow-sm border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex flex-col justify-between transition-all ${
+              c.isClickable 
+                ? "cursor-pointer hover:border-amber-500 hover:shadow-sm hover:scale-[1.02] active:scale-[0.98] border-dashed" 
+                : ""
+            }`}
+          >
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{c.title}</span>
             <span className={`text-2xl font-mono font-bold mt-2 ${c.color}`}>{c.value}</span>
           </Card>

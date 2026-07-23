@@ -14,6 +14,7 @@ export interface ListProductsFilters {
   limit: number
   sortBy?: string
   sortOrder?: "asc" | "desc"
+  showArchived?: boolean | string
 }
 
 export interface ListProductsResult {
@@ -39,7 +40,7 @@ export async function createProduct(data: Partial<ProductDocument>): Promise<Pro
  * Finds a Product by ID.
  */
 export async function findProductById(id: string | Types.ObjectId): Promise<ProductDocument | null> {
-  const doc = await ProductModel.findOne({ _id: id, isDeleted: false })
+  const doc = await ProductModel.findOne({ _id: id })
   return doc ? (doc.toObject() as ProductDocument) : null
 }
 
@@ -56,7 +57,7 @@ export async function findProductBySlug(slug: string): Promise<ProductDocument |
  * Supports searching Product Name, Variant Name, SKU, and Tags.
  */
 export async function listProducts(filters: ListProductsFilters): Promise<ListProductsResult> {
-  const query: Record<string, any> = { isDeleted: false }
+  const query: Record<string, any> = { isDeleted: filters.showArchived === true || filters.showArchived === "true" }
 
   if (filters.categoryId) {
     query.categoryId = filters.categoryId
@@ -134,7 +135,7 @@ export async function updateProduct(
   data: Partial<ProductDocument>,
 ): Promise<ProductDocument | null> {
   const doc = await ProductModel.findOneAndUpdate(
-    { _id: id, isDeleted: false },
+    { _id: id },
     { $set: data },
     { new: true },
   )
@@ -224,10 +225,13 @@ export async function findVariantBySku(sku: string): Promise<VariantDocument | n
 /**
  * Lists all variants belonging to a Product ID.
  */
-export async function findVariantsByProductId(productId: string | Types.ObjectId): Promise<VariantDocument[]> {
+export async function findVariantsByProductId(
+  productId: string | Types.ObjectId,
+  includeDeleted = false,
+): Promise<VariantDocument[]> {
   const docs = await VariantModel.find({
     productId: new Types.ObjectId(productId),
-    isDeleted: false,
+    isDeleted: includeDeleted,
   })
     .sort({ sortOrder: 1, mrp: 1 })
     .lean()
@@ -243,7 +247,7 @@ export async function updateVariant(
   data: Partial<VariantDocument>,
 ): Promise<VariantDocument | null> {
   const doc = await VariantModel.findOneAndUpdate(
-    { _id: id, isDeleted: false },
+    { _id: id },
     { $set: data },
     { new: true },
   )
@@ -320,4 +324,52 @@ export async function findStockTransactionsByVariantId(variantId: string): Promi
     .lean()
     .exec()
   return docs as StockTransactionDocument[]
+}
+
+/**
+ * Restores/unarchives a Product by ID.
+ */
+export async function restoreProduct(id: string | Types.ObjectId): Promise<boolean> {
+  const result = await ProductModel.updateOne(
+    { _id: id, isDeleted: true },
+    {
+      $set: {
+        isDeleted: false,
+        status: ProductStatus.DRAFT,
+      },
+      $unset: {
+        deletedAt: "",
+        deletedBy: "",
+        deletedReason: "",
+      },
+    },
+  )
+  return result.modifiedCount > 0
+}
+
+/**
+ * Restores all variants belonging to a Product.
+ */
+export async function restoreVariantsByProductId(productId: string | Types.ObjectId): Promise<number> {
+  const result = await VariantModel.updateMany(
+    { productId: new Types.ObjectId(productId), isDeleted: true },
+    { $set: { isDeleted: false } },
+  )
+  return result.modifiedCount
+}
+
+/**
+ * Permanently deletes a Product by ID.
+ */
+export async function permanentlyDeleteProduct(id: string | Types.ObjectId): Promise<boolean> {
+  const result = await ProductModel.deleteOne({ _id: id, isDeleted: true })
+  return result.deletedCount > 0
+}
+
+/**
+ * Permanently deletes all variants belonging to a Product.
+ */
+export async function permanentlyDeleteVariantsByProductId(productId: string | Types.ObjectId): Promise<number> {
+  const result = await VariantModel.deleteMany({ productId: new Types.ObjectId(productId) })
+  return result.deletedCount
 }

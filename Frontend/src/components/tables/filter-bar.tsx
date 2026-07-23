@@ -22,9 +22,9 @@ export interface FilterBarProps {
   onSearchChange: (value: string) => void
   searchPlaceholder?: string
   
-  status: string
-  onStatusChange: (value: string) => void
-  statusOptions: FilterOption[]
+  status?: string
+  onStatusChange?: (value: string) => void
+  statusOptions?: FilterOption[]
   statusLabel?: string
 
   // Clear handlers
@@ -48,7 +48,9 @@ export function FilterBar({
   activeFilterChips,
   children,
 }: FilterBarProps) {
-  const selectedStatusLabel = statusOptions.find(o => o.value === status)?.label || "All"
+  const selectedStatusLabel = statusOptions && status
+    ? statusOptions.find(o => o.value === status)?.label || "All"
+    : "All"
 
   return (
     <div className="space-y-3">
@@ -66,25 +68,27 @@ export function FilterBar({
           </div>
 
           {/* Status Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button variant="outline" className="rounded-xl h-9 text-xs gap-1.5 cursor-pointer">
-                  <FunnelIcon className="size-4 text-zinc-500" />
-                  {statusLabel}: {selectedStatusLabel}
-                </Button>
-              }
-            />
-            <DropdownMenuContent>
-              <DropdownMenuRadioGroup value={status} onValueChange={onStatusChange}>
-                {statusOptions.map((opt) => (
-                  <DropdownMenuRadioItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {statusOptions && statusOptions.length > 0 && status !== undefined && onStatusChange && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="outline" className="rounded-xl h-9 text-xs gap-1.5 cursor-pointer">
+                    <FunnelIcon className="size-4 text-zinc-500" />
+                    {statusLabel}: {selectedStatusLabel}
+                  </Button>
+                }
+              />
+              <DropdownMenuContent>
+                <DropdownMenuRadioGroup value={status} onValueChange={onStatusChange}>
+                  {statusOptions.map((opt) => (
+                    <DropdownMenuRadioItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
           {children}
         </div>

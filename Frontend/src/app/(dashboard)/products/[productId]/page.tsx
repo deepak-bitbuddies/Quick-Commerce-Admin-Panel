@@ -55,6 +55,8 @@ import {
   useBadgesQuery,
   useUpdateProductMutation,
   useDeleteProductMutation,
+  useRestoreProductMutation,
+  usePermanentlyDeleteProductMutation,
   useAddVariantMutation,
   useUpdateVariantMutation,
   useDeleteVariantMutation,
@@ -119,9 +121,10 @@ export default function ProductDetailPage({ params }: PageProps) {
     }
   }, [product, selectedVariantIdForHistory])
 
-  // Mutations
   const updateProductMutation = useUpdateProductMutation()
   const deleteProductMutation = useDeleteProductMutation()
+  const restoreProductMutation = useRestoreProductMutation()
+  const permanentlyDeleteProductMutation = usePermanentlyDeleteProductMutation()
   const addVariantMutation = useAddVariantMutation()
   const updateVariantMutation = useUpdateVariantMutation()
   const deleteVariantMutation = useDeleteVariantMutation()
@@ -254,6 +257,7 @@ export default function ProductDetailPage({ params }: PageProps) {
   }
 
   const category = categoriesData?.nodes.find((c) => c.id === product.categoryId)
+  const subCategory = categoriesData?.nodes.find((c) => c.id === product.subCategoryId)
   const brand = brandsData?.brands.find((b) => b.id === product.brandId)
   const activeBadges = badgesData?.badges || []
   const productBadges = product.badgeIds ? activeBadges.filter((b) => product.badgeIds.includes(b.id)) : []
@@ -491,6 +495,34 @@ export default function ProductDetailPage({ params }: PageProps) {
         },
       }
     )
+  }
+
+  const handleRestoreProductClick = () => {
+    if (confirm(`Are you sure you want to restore "${product.name}"? It will be reset to Draft status.`)) {
+      restoreProductMutation.mutate(product.id, {
+        onSuccess: () => {
+          toast.success(`"${product.name}" restored successfully to Draft products.`)
+          router.push("/products")
+        },
+        onError: (err: any) => {
+          toast.error(err.message || "Failed to restore product")
+        }
+      })
+    }
+  }
+
+  const handlePermanentDeleteProductClick = () => {
+    if (confirm(`WARNING: Are you sure you want to PERMANENTLY delete "${product.name}"? This action CANNOT be undone and will delete all variants and stock data.`)) {
+      permanentlyDeleteProductMutation.mutate(product.id, {
+        onSuccess: () => {
+          toast.success(`"${product.name}" permanently deleted.`)
+          router.push("/products")
+        },
+        onError: (err: any) => {
+          toast.error(err.message || "Failed to delete product permanently")
+        }
+      })
+    }
   }
 
   // Overview form update handler
@@ -916,27 +948,50 @@ export default function ProductDetailPage({ params }: PageProps) {
                     </div>
                   </div>
                 ) : (
-                  <>
-                    <div>
-                      <Label className="text-xs text-muted-foreground block mb-0.5">Product Description</Label>
-                      <p className="text-sm text-foreground leading-relaxed">
-                        {product.description || "No description provided."}
-                      </p>
-                    </div>
-                    <Separator />
-                    <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-4 pt-1">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label className="text-xs text-muted-foreground">Availability Status</Label>
-                        <div className="text-sm font-semibold mt-0.5 capitalize">{product.availability.replace("_", " ")}</div>
+                        <Label className="text-xs text-muted-foreground block mb-0.5">Product Name</Label>
+                        <div className="text-sm font-semibold text-foreground">{product.name}</div>
                       </div>
                       <div>
-                        <Label className="text-xs text-muted-foreground">Tax rate settings</Label>
-                        <div className="text-sm font-semibold mt-0.5">
+                        <Label className="text-xs text-muted-foreground block mb-0.5">Availability Status</Label>
+                        <div className="text-sm font-semibold text-foreground capitalize">{product.availability.replace("_", " ")}</div>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <Label className="text-xs text-muted-foreground block mb-0.5">Category</Label>
+                        <div className="text-sm font-semibold text-foreground">{category?.name || "N/A"}</div>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground block mb-0.5">Sub Category</Label>
+                        <div className="text-sm font-semibold text-foreground">{subCategory?.name || "None"}</div>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground block mb-0.5">Brand</Label>
+                        <div className="text-sm font-semibold text-foreground">{brand?.name || "N/A"}</div>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground block mb-0.5">Tax Rate</Label>
+                        <div className="text-sm font-semibold text-foreground">
                           {taxRatesData?.nodes.find((t: any) => t.id === product.taxId)?.name || "N/A"}
                         </div>
                       </div>
                     </div>
-                  </>
+
+                    <Separator />
+
+                    <div>
+                      <Label className="text-xs text-muted-foreground block mb-0.5">Product Description</Label>
+                      <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">
+                        {product.description || "No description provided."}
+                      </p>
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -1133,24 +1188,13 @@ export default function ProductDetailPage({ params }: PageProps) {
                             {minStock} Min / {reorder} Reorder
                           </td>
                           <td className="p-4 text-center">
-                            <div className="flex justify-center gap-1.5">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-[10px] h-7 px-2 cursor-pointer"
-                                onClick={() => triggerStockOp(v, "adjust")}
-                              >
-                                Adjust Stock
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                className="text-[10px] h-7 px-2 cursor-pointer"
-                                onClick={() => triggerStockOp(v, "transfer")}
-                              >
-                                Transfer Pools
-                              </Button>
-                            </div>
+                            <Button
+                              size="sm"
+                              className="text-[10px] h-7 px-2.5 cursor-pointer bg-amber-500 text-white"
+                              onClick={() => router.push(`/products/inventory/${v.id}`)}
+                            >
+                              Manage Stock
+                            </Button>
                           </td>
                         </tr>
                       )
@@ -1461,19 +1505,61 @@ export default function ProductDetailPage({ params }: PageProps) {
                 <CardTitle className="text-xs font-bold uppercase tracking-wider text-rose-500">Danger Zone</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-foreground block">Archive product master</span>
-                  <p className="text-[11px] text-muted-foreground leading-normal">
-                    This will soft-delete the product and archive all sizes and variants, hiding them permanently from delivery and customer apps.
-                  </p>
-                </div>
-                <Button
-                  variant="destructive"
-                  className="w-full font-bold cursor-pointer"
-                  onClick={handleArchiveProductClick}
-                >
-                  Archive Product
-                </Button>
+                {product.status === "archived" ? (
+                  <>
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <span className="text-xs font-bold text-foreground block">Restore Product Master</span>
+                        <p className="text-[11px] text-muted-foreground leading-normal">
+                          This will restore the product and reset its status to Draft. The product and its variants will be visible in the catalog again.
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        className="w-full font-bold cursor-pointer border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
+                        onClick={handleRestoreProductClick}
+                        disabled={restoreProductMutation.isPending}
+                      >
+                        {restoreProductMutation.isPending && <CircleNotchIcon className="size-3 animate-spin mr-1" />}
+                        Restore Product
+                      </Button>
+                    </div>
+
+                    <div className="space-y-3 pt-3 border-t border-red-200 dark:border-red-900">
+                      <div className="space-y-1">
+                        <span className="text-xs font-bold text-rose-600 block">Permanently Delete Product</span>
+                        <p className="text-[11px] text-muted-foreground leading-normal">
+                          WARNING: This action is irreversible. It will permanently delete this product master, all variants, and all inventory records.
+                        </p>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        className="w-full font-bold cursor-pointer bg-rose-600 hover:bg-rose-700"
+                        onClick={handlePermanentDeleteProductClick}
+                        disabled={permanentlyDeleteProductMutation.isPending}
+                      >
+                        {permanentlyDeleteProductMutation.isPending && <CircleNotchIcon className="size-3 animate-spin mr-1" />}
+                        Delete Permanently
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <span className="text-xs font-bold text-foreground block">Archive Product Master</span>
+                      <p className="text-[11px] text-muted-foreground leading-normal">
+                        This will soft-delete the product and archive all sizes and variants, hiding them permanently from delivery and customer apps.
+                      </p>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      className="w-full font-bold cursor-pointer"
+                      onClick={handleArchiveProductClick}
+                    >
+                      Archive Product
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

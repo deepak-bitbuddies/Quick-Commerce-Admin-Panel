@@ -17,6 +17,8 @@ import {
   transferVariantStock,
   getStockHistory,
   getVariantById,
+  restoreProduct,
+  permanentlyDeleteProduct,
 } from "./service.js"
 import { toProductResponseDto, toVariantResponseDto, toStockTransactionResponseDto } from "./mapper.js"
 import {
@@ -449,6 +451,7 @@ export async function getProductsStatsHandler(
   const activeProducts = await ProductModel.countDocuments({ status: ProductStatus.ACTIVE, isDeleted: false })
   const inactiveProducts = await ProductModel.countDocuments({ status: ProductStatus.INACTIVE, isDeleted: false })
   const draftProducts = await ProductModel.countDocuments({ status: ProductStatus.DRAFT, isDeleted: false })
+  const archivedProducts = await ProductModel.countDocuments({ isDeleted: true })
 
   // Count of variants out of stock (available stock = 0)
   const outOfStock = await VariantModel.countDocuments({
@@ -469,6 +472,7 @@ export async function getProductsStatsHandler(
     draftProducts,
     outOfStock,
     lowStock,
+    archivedProducts,
   }, "Products statistics fetched successfully")
 }
 
@@ -513,4 +517,22 @@ export async function getPublicProductHandler(
     toProductResponseDto(result.product, result.variants),
     "Public product details fetched successfully",
   )
+}
+
+export async function restoreProductHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+): Promise<void> {
+  const { productId } = validateSchema(productIdParamsSchema, request.params) as { productId: string }
+  await restoreProduct(productId)
+  sendSuccess(reply, null, "Product restored successfully", 200)
+}
+
+export async function permanentlyDeleteProductHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+): Promise<void> {
+  const { productId } = validateSchema(productIdParamsSchema, request.params) as { productId: string }
+  await permanentlyDeleteProduct(productId)
+  sendSuccess(reply, null, "Product permanently deleted successfully", 200)
 }
