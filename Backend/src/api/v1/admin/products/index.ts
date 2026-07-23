@@ -1,0 +1,5 @@
+export { adminProductsRoutes, publicProductsRoutes } from "./routes.js"
+export { ProductModel, VariantModel, StockTransactionModel, type ProductDocument, type VariantDocument, type StockTransactionDocument } from "./model.js"
+export { ProductStatus, VariantStatus } from "./enums.js"
+export * from "./dto.js"
+export * from "./service.js"

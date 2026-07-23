@@ -1,3 +1,5 @@
 export { ProductForm } from "./components/product-form"
-export { getProducts, createProduct } from "./api/products-api"
-export type { Product, CreateProductInput } from "./types/product"
+export { ProductCreationWizard } from "./components/product-creation-wizard"
+export { StockAdjustDialog, StockHistoryDialog, StockTransferDialog } from "./components/stock-adjust-dialog"
+export * from "./api/products-api"
+export * from "./types/product"

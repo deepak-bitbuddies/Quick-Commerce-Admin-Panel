@@ -69,13 +69,8 @@ export const navGroups: NavGroup[] = [
         icon: PackageIcon,
         items: [
           { labelKey: "products", href: "/products" },
-          {
-            labelKey: "pendingApprovalProducts",
-            href: "/products/pending-approval",
-          },
           { labelKey: "badges", href: "/products/badges" },
-          { labelKey: "productFaqs", href: "/products/faqs" },
-          { labelKey: "productReviews", href: "/products/reviews" },
+          { labelKey: "inventory", href: "/products/inventory" },
         ],
       },
       { labelKey: "brands", href: "/brands", icon: SparkleIcon },
