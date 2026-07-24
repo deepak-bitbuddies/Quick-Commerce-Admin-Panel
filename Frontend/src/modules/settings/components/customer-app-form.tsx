@@ -1,6 +1,8 @@
 "use client"
 
 import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { CircleNotch } from "@phosphor-icons/react"
@@ -8,24 +10,79 @@ import { CircleNotch } from "@phosphor-icons/react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Field, FieldGroup, FieldLabel, FieldSet, FieldDescription } from "@/components/ui/field"
+import { Switch } from "@/components/ui/switch"
+import { Field, FieldError, FieldGroup, FieldLabel, FieldSet, FieldDescription } from "@/components/ui/field"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useUpdateSettingsGroupMutation } from "../hooks/use-settings"
 import { SettingGroup } from "../enums/settings-group"
 import type { CustomerAppSettings } from "../types/settings-types"
 import type { ApiErrorPayload } from "@/lib/axios"
 import { ScopeCard } from "./scope-card"
 
+// Maintenance/announcement message content is only required to be non-empty when
+// enabled; the fields themselves stay required strings (matching CustomerAppSettings)
+// since they always hold a value, just conditionally validated via refine below
+// instead of forcing hidden fields to be required.
+const customerAppFormSchema = z
+  .object({
+    maintenance: z.object({
+      enabled: z.boolean(),
+      message: z.string(),
+      image: z.string(),
+    }),
+    features: z.object({
+      wallet: z.boolean(),
+      referral: z.boolean(),
+      ratings: z.boolean(),
+      reviews: z.boolean(),
+      guestCheckout: z.boolean(),
+      coupons: z.boolean(),
+      offers: z.boolean(),
+    }),
+    orders: z.object({
+      minOrderAmount: z.number().min(0, "Must be 0 or more"),
+      freeDeliveryThreshold: z.number().min(0, "Must be 0 or more"),
+      orderCancellationWindow: z.number().min(0, "Must be 0 or more"),
+      returnWindow: z.number().min(0, "Must be 0 or more"),
+      estimatedDeliveryBuffer: z.number().min(0, "Must be 0 or more"),
+    }),
+    announcements: z.object({
+      enabled: z.boolean(),
+      message: z.string(),
+      style: z.enum(["info", "warning", "emergency"]),
+    }),
+  })
+  .refine(
+    (data) => !data.maintenance.enabled || Boolean(data.maintenance.message?.trim()),
+    {
+      message: "Maintenance message is required",
+      path: ["maintenance", "message"],
+    }
+  )
+  .refine(
+    (data) => !data.announcements.enabled || Boolean(data.announcements.message?.trim()),
+    {
+      message: "Announcement message is required",
+      path: ["announcements", "message"],
+    }
+  )
+
 interface CustomerAppFormProps {
   initialValues: CustomerAppSettings
 }
-
-const selectClass = "flex h-8 w-full rounded-lg border border-border bg-background px-2.5 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
 
 export function CustomerAppForm({ initialValues }: CustomerAppFormProps) {
   const t = useTranslations("Settings")
   const { mutate, isPending } = useUpdateSettingsGroupMutation()
 
   const { control, handleSubmit, watch } = useForm<CustomerAppSettings>({
+    resolver: zodResolver(customerAppFormSchema),
     defaultValues: {
       maintenance: {
         enabled: initialValues.maintenance?.enabled ?? false,
@@ -109,11 +166,11 @@ export function CustomerAppForm({ initialValues }: CustomerAppFormProps) {
                     <Controller
                       name="maintenance.message"
                       control={control}
-                      rules={{ required: true }}
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
                           <FieldLabel htmlFor={field.name}>{t("customerApp.maintenanceMessage")}</FieldLabel>
                           <Input {...field} id={field.name} />
+                          {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                         </Field>
                       )}
                     />
@@ -125,6 +182,7 @@ export function CustomerAppForm({ initialValues }: CustomerAppFormProps) {
                         <Field data-invalid={fieldState.invalid}>
                           <FieldLabel htmlFor={field.name}>{t("customerApp.maintenanceImage")}</FieldLabel>
                           <Input {...field} id={field.name} type="url" placeholder="https://..." />
+                          {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                         </Field>
                       )}
                     />
@@ -249,16 +307,16 @@ export function CustomerAppForm({ initialValues }: CustomerAppFormProps) {
                   <Controller
                     name="orders.minOrderAmount"
                     control={control}
-                    rules={{ required: true, min: 0 }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("customerApp.minOrderAmount")}</FieldLabel>
                         <Input
                           {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
                           id={field.name}
                           type="number"
-                          onChange={(e) => field.onChange(Number(e.target.value))}
                         />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />
@@ -266,16 +324,16 @@ export function CustomerAppForm({ initialValues }: CustomerAppFormProps) {
                   <Controller
                     name="orders.freeDeliveryThreshold"
                     control={control}
-                    rules={{ required: true, min: 0 }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("customerApp.freeDeliveryThreshold")}</FieldLabel>
                         <Input
                           {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
                           id={field.name}
                           type="number"
-                          onChange={(e) => field.onChange(Number(e.target.value))}
                         />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />
@@ -285,16 +343,16 @@ export function CustomerAppForm({ initialValues }: CustomerAppFormProps) {
                   <Controller
                     name="orders.orderCancellationWindow"
                     control={control}
-                    rules={{ required: true, min: 0 }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("customerApp.orderCancellationWindow")}</FieldLabel>
                         <Input
                           {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
                           id={field.name}
                           type="number"
-                          onChange={(e) => field.onChange(Number(e.target.value))}
                         />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />
@@ -302,16 +360,16 @@ export function CustomerAppForm({ initialValues }: CustomerAppFormProps) {
                   <Controller
                     name="orders.returnWindow"
                     control={control}
-                    rules={{ required: true, min: 0 }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("customerApp.returnWindow")}</FieldLabel>
                         <Input
                           {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
                           id={field.name}
                           type="number"
-                          onChange={(e) => field.onChange(Number(e.target.value))}
                         />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />
@@ -319,16 +377,16 @@ export function CustomerAppForm({ initialValues }: CustomerAppFormProps) {
                   <Controller
                     name="orders.estimatedDeliveryBuffer"
                     control={control}
-                    rules={{ required: true, min: 0 }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("customerApp.estimatedDeliveryBuffer")}</FieldLabel>
                         <Input
                           {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
                           id={field.name}
                           type="number"
-                          onChange={(e) => field.onChange(Number(e.target.value))}
                         />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />
@@ -362,11 +420,11 @@ export function CustomerAppForm({ initialValues }: CustomerAppFormProps) {
                       <Controller
                         name="announcements.message"
                         control={control}
-                        rules={{ required: true }}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
                             <FieldLabel htmlFor={field.name}>{t("customerApp.announcementMessage")}</FieldLabel>
                             <Input {...field} id={field.name} />
+                            {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                           </Field>
                         )}
                       />
@@ -375,15 +433,28 @@ export function CustomerAppForm({ initialValues }: CustomerAppFormProps) {
                     <Controller
                       name="announcements.style"
                       control={control}
-                      rules={{ required: true }}
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
                           <FieldLabel htmlFor={field.name}>{t("customerApp.announcementStyle")}</FieldLabel>
-                          <select {...field} id={field.name} className={selectClass}>
-                            <option value="info">Info</option>
-                            <option value="warning">Warning</option>
-                            <option value="emergency">Emergency</option>
-                          </select>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            items={[
+                              { value: "info", label: "Info" },
+                              { value: "warning", label: "Warning" },
+                              { value: "emergency", label: "Emergency" },
+                            ]}
+                          >
+                            <SelectTrigger id={field.name} className="w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="info">Info</SelectItem>
+                              <SelectItem value="warning">Warning</SelectItem>
+                              <SelectItem value="emergency">Emergency</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                         </Field>
                       )}
                     />
@@ -402,32 +473,5 @@ export function CustomerAppForm({ initialValues }: CustomerAppFormProps) {
         </CardContent>
       </Card>
     </div>
-  )
-}
-
-function Switch({
-  checked,
-  onCheckedChange,
-  id,
-}: {
-  checked: boolean
-  onCheckedChange: (checked: boolean) => void
-  id?: string
-}) {
-  return (
-    <button
-      type="button"
-      onClick={() => onCheckedChange(!checked)}
-      id={id}
-      className={`relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-        checked ? "bg-primary" : "bg-zinc-200 dark:bg-zinc-800"
-      }`}
-    >
-      <span
-        className={`pointer-events-none inline-block size-4.5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-          checked ? "translate-x-4.5" : "translate-x-0"
-        }`}
-      />
-    </button>
   )
 }

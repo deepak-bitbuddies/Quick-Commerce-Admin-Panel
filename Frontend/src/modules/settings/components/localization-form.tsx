@@ -1,30 +1,102 @@
 "use client"
 
-import { useForm, Controller } from "react-hook-form"
+import { useForm, Controller, type Control } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { CircleNotch } from "@phosphor-icons/react"
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Field, FieldGroup, FieldLabel, FieldSet, FieldDescription } from "@/components/ui/field"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Field, FieldError, FieldGroup, FieldLabel, FieldSet, FieldDescription } from "@/components/ui/field"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useUpdateSettingsGroupMutation } from "../hooks/use-settings"
 import { SettingGroup } from "../enums/settings-group"
 import type { LocalizationSettings } from "../types/settings-types"
 import type { ApiErrorPayload } from "@/lib/axios"
 import { ScopeCard } from "./scope-card"
 
+// No `.min(1)` on the availability arrays: the previous `rules={{ required: true }}`
+// never actually enforced "at least one language" (an empty array is truthy in JS),
+// so that was never a real business rule in effect here — not invented now either.
+const localizationFormSchema = z.object({
+  defaultLanguage: z.string().min(1, "Default language is required"),
+  availability: z.object({
+    admin: z.array(z.string()),
+    customer: z.array(z.string()),
+    delivery: z.array(z.string()),
+  }),
+})
+
+type AvailabilityFieldName = "availability.admin" | "availability.customer" | "availability.delivery"
+
+interface LanguageAvailabilityFieldProps {
+  control: Control<LocalizationSettings>
+  name: AvailabilityFieldName
+  label: string
+  description: string
+}
+
+function LanguageAvailabilityField({ control, name, label, description }: LanguageAvailabilityFieldProps) {
+  return (
+    <Controller
+      name={name}
+      control={control}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel>{label}</FieldLabel>
+          <div className="flex flex-wrap gap-4 mt-1">
+            <label className="flex items-center gap-2 text-sm select-none cursor-pointer">
+              <Checkbox
+                checked={field.value?.includes("en")}
+                onCheckedChange={(checked) => {
+                  const nextVal = checked
+                    ? [...(field.value || []), "en"]
+                    : (field.value || []).filter((l) => l !== "en")
+                  field.onChange(nextVal)
+                }}
+              />
+              <span>English (en)</span>
+            </label>
+            <label className="flex items-center gap-2 text-sm select-none cursor-pointer">
+              <Checkbox
+                checked={field.value?.includes("hi")}
+                onCheckedChange={(checked) => {
+                  const nextVal = checked
+                    ? [...(field.value || []), "hi"]
+                    : (field.value || []).filter((l) => l !== "hi")
+                  field.onChange(nextVal)
+                }}
+              />
+              <span>Hindi (hi)</span>
+            </label>
+          </div>
+          <FieldDescription>{description}</FieldDescription>
+          {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
+        </Field>
+      )}
+    />
+  )
+}
+
 interface LocalizationFormProps {
   initialValues: LocalizationSettings
 }
-
-const selectClass = "flex h-8 w-full rounded-lg border border-border bg-background px-2.5 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
 
 export function LocalizationForm({ initialValues }: LocalizationFormProps) {
   const t = useTranslations("Settings")
   const { mutate, isPending } = useUpdateSettingsGroupMutation()
 
   const { control, handleSubmit } = useForm<LocalizationSettings>({
+    resolver: zodResolver(localizationFormSchema),
     defaultValues: {
       defaultLanguage: initialValues.defaultLanguage || "en",
       availability: {
@@ -65,142 +137,49 @@ export function LocalizationForm({ initialValues }: LocalizationFormProps) {
                 <Controller
                   name="defaultLanguage"
                   control={control}
-                  rules={{ required: true }}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel htmlFor={field.name}>{t("localization.defaultLanguage")}</FieldLabel>
-                      <select {...field} id={field.name} className={selectClass}>
-                        <option value="en">English (en)</option>
-                        <option value="hi">Hindi (hi)</option>
-                      </select>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        items={[
+                          { value: "en", label: "English (en)" },
+                          { value: "hi", label: "Hindi (hi)" },
+                        ]}
+                      >
+                        <SelectTrigger id={field.name} className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="en">English (en)</SelectItem>
+                          <SelectItem value="hi">Hindi (hi)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                     </Field>
                   )}
                 />
 
-                <Controller
+                <LanguageAvailabilityField
+                  control={control}
                   name="availability.admin"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Field>
-                      <FieldLabel>{t("localization.availabilityAdmin")}</FieldLabel>
-                      <div className="flex flex-wrap gap-4 mt-1">
-                        <label className="flex items-center gap-2 text-sm select-none cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={field.value?.includes("en")}
-                            className="size-4 shrink-0 rounded border-border"
-                            onChange={(e) => {
-                              const nextVal = e.target.checked
-                                ? [...(field.value || []), "en"]
-                                : (field.value || []).filter((l) => l !== "en")
-                              field.onChange(nextVal)
-                            }}
-                          />
-                          <span>English (en)</span>
-                        </label>
-                        <label className="flex items-center gap-2 text-sm select-none cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={field.value?.includes("hi")}
-                            className="size-4 shrink-0 rounded border-border"
-                            onChange={(e) => {
-                              const nextVal = e.target.checked
-                                ? [...(field.value || []), "hi"]
-                                : (field.value || []).filter((l) => l !== "hi")
-                              field.onChange(nextVal)
-                            }}
-                          />
-                          <span>Hindi (hi)</span>
-                        </label>
-                      </div>
-                      <FieldDescription>{t("localization.availabilityAdminDesc")}</FieldDescription>
-                    </Field>
-                  )}
+                  label={t("localization.availabilityAdmin")}
+                  description={t("localization.availabilityAdminDesc")}
                 />
 
-                <Controller
+                <LanguageAvailabilityField
+                  control={control}
                   name="availability.customer"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Field>
-                      <FieldLabel>{t("localization.availabilityCustomer")}</FieldLabel>
-                      <div className="flex flex-wrap gap-4 mt-1">
-                        <label className="flex items-center gap-2 text-sm select-none cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={field.value?.includes("en")}
-                            className="size-4 shrink-0 rounded border-border"
-                            onChange={(e) => {
-                              const nextVal = e.target.checked
-                                ? [...(field.value || []), "en"]
-                                : (field.value || []).filter((l) => l !== "en")
-                              field.onChange(nextVal)
-                            }}
-                          />
-                          <span>English (en)</span>
-                        </label>
-                        <label className="flex items-center gap-2 text-sm select-none cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={field.value?.includes("hi")}
-                            className="size-4 shrink-0 rounded border-border"
-                            onChange={(e) => {
-                              const nextVal = e.target.checked
-                                ? [...(field.value || []), "hi"]
-                                : (field.value || []).filter((l) => l !== "hi")
-                              field.onChange(nextVal)
-                            }}
-                          />
-                          <span>Hindi (hi)</span>
-                        </label>
-                      </div>
-                      <FieldDescription>{t("localization.availabilityCustomerDesc")}</FieldDescription>
-                    </Field>
-                  )}
+                  label={t("localization.availabilityCustomer")}
+                  description={t("localization.availabilityCustomerDesc")}
                 />
 
-                <Controller
-                  name="availability.delivery"
+                <LanguageAvailabilityField
                   control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Field>
-                      <FieldLabel>{t("localization.availabilityDelivery")}</FieldLabel>
-                      <div className="flex flex-wrap gap-4 mt-1">
-                        <label className="flex items-center gap-2 text-sm select-none cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={field.value?.includes("en")}
-                            className="size-4 shrink-0 rounded border-border"
-                            onChange={(e) => {
-                              const nextVal = e.target.checked
-                                ? [...(field.value || []), "en"]
-                                : (field.value || []).filter((l) => l !== "en")
-                              field.onChange(nextVal)
-                            }}
-                          />
-                          <span>English (en)</span>
-                        </label>
-                        <label className="flex items-center gap-2 text-sm select-none cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={field.value?.includes("hi")}
-                            className="size-4 shrink-0 rounded border-border"
-                            onChange={(e) => {
-                              const nextVal = e.target.checked
-                                ? [...(field.value || []), "hi"]
-                                : (field.value || []).filter((l) => l !== "hi")
-                              field.onChange(nextVal)
-                            }}
-                          />
-                          <span>Hindi (hi)</span>
-                        </label>
-                      </div>
-                      <FieldDescription>{t("localization.availabilityDeliveryDesc")}</FieldDescription>
-                    </Field>
-                  )}
+                  name="availability.delivery"
+                  label={t("localization.availabilityDelivery")}
+                  description={t("localization.availabilityDeliveryDesc")}
                 />
               </FieldGroup>
             </FieldSet>

@@ -19,6 +19,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table"
 import { PageHeader } from "@/components/layout/page-header"
 
 import {
@@ -175,23 +190,23 @@ export default function GlobalFaqsPage() {
           {isFaqsLoading ? (
             <div className="text-center p-8 animate-pulse text-sm text-muted-foreground">Loading catalog FAQs...</div>
           ) : filteredFaqs && filteredFaqs.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
-                <thead>
-                  <tr className="text-muted-foreground font-semibold text-left bg-zinc-50/50 dark:bg-zinc-900/50">
-                    <th className="p-4 w-[25%]">Product Reference</th>
-                    <th className="p-4 w-[60%]">FAQ Details</th>
-                    <th className="p-4 text-center">Status</th>
-                    <th className="p-4 text-center w-[15%]">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+            <>
+              <Table className="text-xs">
+                <TableHeader>
+                  <TableRow className="bg-zinc-50/50 dark:bg-zinc-900/50">
+                    <TableHead className="p-4 w-[25%]">Product Reference</TableHead>
+                    <TableHead className="p-4 w-[60%]">FAQ Details</TableHead>
+                    <TableHead className="p-4 text-center">Status</TableHead>
+                    <TableHead className="p-4 text-center w-[15%]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {filteredFaqs.map((faq) => {
                     const prodId = typeof faq.productId === "object" ? faq.productId._id : faq.productId
                     const prodName = typeof faq.productId === "object" ? faq.productId.name : "Unknown Product"
                     return (
-                      <tr key={faq._id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/30">
-                        <td className="p-4 align-top">
+                      <TableRow key={faq._id}>
+                        <TableCell className="p-4 align-top whitespace-normal">
                           <span className="font-bold text-foreground block">{prodName}</span>
                           <button
                             onClick={() => router.push(`/products/${prodId}`)}
@@ -199,8 +214,8 @@ export default function GlobalFaqsPage() {
                           >
                             <EyeIcon className="size-3" /> View Detail Page
                           </button>
-                        </td>
-                        <td className="p-4 space-y-1 align-top">
+                        </TableCell>
+                        <TableCell className="p-4 space-y-1 align-top whitespace-normal">
                           <div className="flex gap-1.5 items-start">
                             <QuestionIcon className="size-4 text-amber-500 shrink-0 mt-0.5" />
                             <span className="font-semibold text-foreground text-sm">{faq.question}</span>
@@ -209,26 +224,26 @@ export default function GlobalFaqsPage() {
                           <div className="pl-5 pt-1">
                             <Badge variant="outline" className="text-[9px] font-mono">Order: {faq.sortOrder}</Badge>
                           </div>
-                        </td>
-                        <td className="p-4 text-center align-top">
+                        </TableCell>
+                        <TableCell className="p-4 text-center align-top">
                           <Badge variant={faq.status === "active" ? "default" : "secondary"} className="capitalize">
                             {faq.status}
                           </Badge>
-                        </td>
-                        <td className="p-4 text-center align-top space-x-1">
+                        </TableCell>
+                        <TableCell className="p-4 text-center align-top space-x-1 whitespace-normal">
                           <Button variant="outline" size="sm" onClick={() => handleOpenFaqModal(faq)} className="cursor-pointer">
                             <PencilSimpleIcon className="size-3.5 mr-1" /> Edit
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => handleDeleteFaq(faq._id, prodId)} className="text-destructive hover:bg-destructive/5 hover:text-destructive cursor-pointer">
                             <TrashIcon className="size-3.5 mr-1" /> Delete
                           </Button>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     )
                   })}
-                </tbody>
-              </table>
-            </div>
+                </TableBody>
+              </Table>
+            </>
           ) : (
             <div className="p-8 text-center text-muted-foreground">
               No FAQs match your filter criteria or none have been added. Click "Add FAQ" to create one.
@@ -246,19 +261,23 @@ export default function GlobalFaqsPage() {
           <div className="space-y-4 py-4">
             <div className="space-y-1.5">
               <Label htmlFor="global-faq-product">Product Reference</Label>
-              <select
-                id="global-faq-product"
+              <Select
                 value={faqProductId}
-                onChange={(e) => setFaqProductId(e.target.value)}
+                onValueChange={(val) => setFaqProductId(val ?? faqProductId)}
                 disabled={!!editingFaq}
-                className="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background px-3 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-50"
+                items={products.map((p) => ({ value: p.id, label: p.name }))}
               >
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger id="global-faq-product" className="w-full">
+                  <SelectValue placeholder="Select a product" />
+                </SelectTrigger>
+                <SelectContent>
+                  {products.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="global-faq-question">Question</Label>
@@ -291,15 +310,22 @@ export default function GlobalFaqsPage() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="global-faq-status">Status</Label>
-                <select
-                  id="global-faq-status"
+                <Select
                   value={faqStatus}
-                  onChange={(e) => setFaqStatus(e.target.value as any)}
-                  className="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background px-3 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  onValueChange={(val) => setFaqStatus((val ?? faqStatus) as typeof faqStatus)}
+                  items={[
+                    { value: "active", label: "Active" },
+                    { value: "inactive", label: "Inactive" },
+                  ]}
                 >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
+                  <SelectTrigger id="global-faq-status" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>

@@ -40,6 +40,7 @@ import {
   permanentlyDeleteProduct,
 } from "../api/products-api"
 import { productsQueryKeys, badgesQueryKeys } from "../constants/query-keys"
+import type { StockTransferDirection } from "../enums/stock-transfer-direction"
 import type {
   Product,
   ProductListParams,
@@ -265,7 +266,7 @@ export function useTransferStockMutation() {
     }: {
       variantId: string
       qty: number
-      direction: "APP_TO_LOCAL" | "LOCAL_TO_APP"
+      direction: StockTransferDirection
       reason?: string
       reference?: string
     }) => transferVariantStock(variantId, { qty, direction, reason, reference }),

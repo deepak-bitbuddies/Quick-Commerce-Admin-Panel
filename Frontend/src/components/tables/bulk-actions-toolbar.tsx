@@ -7,6 +7,7 @@ import {
   PowerIcon,
 } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
 
 interface BulkActionsToolbarProps {
   selectedCount: number
@@ -36,14 +37,15 @@ export function BulkActionsToolbar({
       <span className="text-xs font-semibold whitespace-nowrap">
         {selectedCount} item(s) selected
       </span>
-      <button
+      <Button
+        variant="ghost"
         onClick={onClearSelection}
-        className="text-[10px] uppercase font-bold text-zinc-400 hover:text-zinc-200 dark:hover:text-zinc-700 cursor-pointer"
         disabled={isPending}
+        className="h-auto p-0 text-[10px] uppercase font-bold text-zinc-400 hover:bg-transparent hover:text-zinc-200 dark:hover:bg-transparent dark:hover:text-zinc-700"
       >
         Clear
-      </button>
-      <div className="h-4 w-px bg-zinc-800 dark:bg-zinc-200" />
+      </Button>
+      <Separator orientation="vertical" className="h-4 bg-zinc-800 dark:bg-zinc-200" />
       <div className="flex gap-1.5 items-center">
         {onActivate && (
           <Button

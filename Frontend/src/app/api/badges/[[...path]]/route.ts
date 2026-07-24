@@ -34,7 +34,9 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   const { path } = await params
   const pathSegment = path ? `/${path.join("/")}` : ""
   const body = await request.json().catch(() => ({}))
-  const backendPath = `/api/v1/admin/badges${pathSegment}`
+  const { searchParams } = new URL(request.url)
+  const queryString = searchParams.toString()
+  const backendPath = `/api/v1/admin/badges${pathSegment}${queryString ? `?${queryString}` : ""}`
 
   try {
     const data = await backendFetch<unknown>(backendPath, {
@@ -60,7 +62,9 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   const { path } = await params
   const pathSegment = path ? `/${path.join("/")}` : ""
   const body = await request.json().catch(() => ({}))
-  const backendPath = `/api/v1/admin/badges${pathSegment}`
+  const { searchParams } = new URL(request.url)
+  const queryString = searchParams.toString()
+  const backendPath = `/api/v1/admin/badges${pathSegment}${queryString ? `?${queryString}` : ""}`
 
   try {
     const data = await backendFetch<unknown>(backendPath, {

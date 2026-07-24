@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useCreateBadgeMutation, useUpdateBadgeMutation } from "../hooks/use-products"
 import type { ProductBadge } from "../types/product"
 import type { ApiErrorPayload } from "@/lib/axios"
@@ -235,14 +236,22 @@ export function BadgeDialog({ open, onOpenChange, badge }: BadgeDialogProps) {
                   name="status"
                   control={control}
                   render={({ field }) => (
-                    <select
+                    <Select
                       value={field.value}
-                      onChange={field.onChange}
-                      className="h-9 px-3 w-full rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300"
+                      onValueChange={field.onChange}
+                      items={[
+                        { value: "active", label: "Active" },
+                        { value: "inactive", label: "Inactive" },
+                      ]}
                     >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
                   )}
                 />
               </FieldGroup>

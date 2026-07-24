@@ -30,7 +30,7 @@ import {
   type UpdateVariantDto,
   type AdjustStockDto,
 } from "./dto.js"
-import { ProductStatus, VariantStatus, StockTransactionType, ProductAvailability } from "./enums.js"
+import { ProductStatus, VariantStatus, StockTransactionType, ProductAvailability, StockTransferDirection } from "./enums.js"
 import { CatalogNodeModel } from "../categories/model.js"
 import { BrandModel } from "../brands/model.js"
 import { TaxRateModel } from "../tax-rates/model.js"
@@ -961,7 +961,7 @@ export async function adjustVariantStock(
 export async function transferVariantStock(
   variantId: string,
   qty: number,
-  direction: "APP_TO_LOCAL" | "LOCAL_TO_APP",
+  direction: StockTransferDirection,
   reason: string,
   reference: string,
   createdBy: string,
@@ -982,7 +982,7 @@ export async function transferVariantStock(
   let newApp = appStock
   let newLocal = localStock
 
-  if (direction === "APP_TO_LOCAL") {
+  if (direction === StockTransferDirection.APP_TO_LOCAL) {
     if (appStock < qty) {
       throw new ValidationError(`Insufficient App stock for transfer. Current: ${appStock}, Requested: ${qty}`)
     }
@@ -1018,7 +1018,7 @@ export async function transferVariantStock(
     qtyChanged: qty,
     previousStock: totalStock,
     newStock: totalStock,
-    reason: reason || `Transferred ${qty} from ${direction === "APP_TO_LOCAL" ? "App to Local" : "Local to App"}`,
+    reason: reason || `Transferred ${qty} from ${direction === StockTransferDirection.APP_TO_LOCAL ? "App to Local" : "Local to App"}`,
     reference: reference || "STOCK_TRANSFER",
     createdBy,
     updatedBy: createdBy,

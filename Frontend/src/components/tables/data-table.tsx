@@ -10,6 +10,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 export interface ColumnDef<T> {
   header: ReactNode
@@ -77,11 +81,10 @@ export function DataTable<T>({
           {renderSubRow && <TableHead className="w-10" />}
           {showCheckbox && (
             <TableHead className="w-10">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={data.length > 0 && selectedIds.length === data.length}
-                onChange={(e) => handleSelectAllChange(e.target.checked)}
-                className="size-3.5 accent-primary cursor-pointer rounded"
+                onCheckedChange={(checked) => handleSelectAllChange(checked === true)}
+                aria-label="Select all rows"
               />
             </TableHead>
           )}
@@ -98,7 +101,7 @@ export function DataTable<T>({
             <TableRow key={idx}>
               {Array.from({ length: totalCols }).map((_, cIdx) => (
                 <TableCell key={cIdx}>
-                  <div className="h-4 bg-zinc-100 dark:bg-zinc-800 animate-pulse rounded w-20" />
+                  <Skeleton className="h-4 w-20" />
                 </TableCell>
               ))}
             </TableRow>
@@ -124,23 +127,34 @@ export function DataTable<T>({
                 >
                   {renderSubRow && (
                     <TableCell className="w-10">
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         onClick={() => toggleRow(rowId)}
-                        className="size-6 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center cursor-pointer transition-all"
-                        style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}
+                        className="size-6"
+                        aria-expanded={isExpanded}
                       >
-                        <CaretRightIcon className="size-3.5 text-zinc-500" />
-                      </button>
+                        <CaretRightIcon
+                          className={cn(
+                            "size-3.5 text-zinc-500 transition-transform duration-200 ease-in-out",
+                            isExpanded && "rotate-90"
+                          )}
+                        />
+                        <span className="sr-only">
+                          {isExpanded ? "Collapse row" : "Expand row"}
+                        </span>
+                      </Button>
                     </TableCell>
                   )}
                   {showCheckbox && (
                     <TableCell>
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={isSelected}
-                        onChange={(e) => onSelectRow && onSelectRow(rowId, e.target.checked)}
-                        className="size-3.5 accent-primary cursor-pointer rounded"
+                        onCheckedChange={(checked) =>
+                          onSelectRow && onSelectRow(rowId, checked === true)
+                        }
+                        aria-label="Select row"
                       />
                     </TableCell>
                   )}

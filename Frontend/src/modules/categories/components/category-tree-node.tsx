@@ -13,10 +13,24 @@ import {
   TrashIcon,
   CheckCircleIcon,
   PowerIcon,
+  DotsThreeIcon,
 } from "@phosphor-icons/react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   CatalogNodeType,
   CatalogNodeStatus,
@@ -75,7 +89,7 @@ export function CategoryTreeNode({
   }
 
   return (
-    <div className="space-y-1.5">
+    <Collapsible open={expanded} onOpenChange={setExpanded} className="space-y-1.5">
       {/* Node Row container */}
       <div
         className={cn(
@@ -85,21 +99,28 @@ export function CategoryTreeNode({
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {/* Collapse/Expand toggle arrow */}
-          <button
-            type="button"
-            onClick={() => setExpanded(!expanded)}
-            className={cn(
-              "p-1 hover:bg-zinc-200/50 dark:hover:bg-zinc-800 rounded transition-transform cursor-pointer",
-              !hasChildren && "opacity-0 pointer-events-none"
-            )}
+          <CollapsibleTrigger
+            render={
+              <button
+                type="button"
+                disabled={!hasChildren}
+                className={cn(
+                  "p-1 hover:bg-zinc-200/50 dark:hover:bg-zinc-800 rounded transition-colors cursor-pointer",
+                  !hasChildren && "opacity-0 pointer-events-none"
+                )}
+              />
+            }
           >
             <CaretRightIcon
               className={cn(
-                "size-3.5 transition-transform text-zinc-500",
+                "size-3.5 transition-transform duration-200 ease-in-out text-zinc-500",
                 expanded && "rotate-90"
               )}
             />
-          </button>
+            <span className="sr-only">
+              {expanded ? "Collapse node" : "Expand node"}
+            </span>
+          </CollapsibleTrigger>
 
           {/* Node Category Icon */}
           <span className="shrink-0">{getNodeIcon()}</span>
@@ -140,63 +161,59 @@ export function CategoryTreeNode({
 
           <div>{getStatusBadge()}</div>
 
-          {/* Row editing actions on hover */}
-          <div className="flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
-            <button
-              type="button"
-              onClick={() => onEdit(node)}
-              className="p-1 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white rounded text-zinc-500 transition-colors cursor-pointer"
-              title={t("editNode")}
-            >
-              <PencilSimpleIcon className="size-3.5" />
-            </button>
-
-            {node.status === CatalogNodeStatus.INACTIVE && (
-              <button
-                type="button"
-                onClick={() => onToggleStatus(node)}
-                className="p-1 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-950/50 dark:hover:text-emerald-400 rounded text-zinc-500 transition-colors cursor-pointer"
-                title="Activate Node"
-              >
-                <CheckCircleIcon className="size-3.5" />
-              </button>
-            )}
-            {node.status === CatalogNodeStatus.ACTIVE && (
-              <button
-                type="button"
-                onClick={() => onToggleStatus(node)}
-                className="p-1 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white rounded text-zinc-500 transition-colors cursor-pointer"
-                title="Deactivate Node"
-              >
-                <PowerIcon className="size-3.5" />
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => onDelete(node)}
-              className="p-1 hover:bg-rose-55 hover:text-rose-600 dark:hover:bg-rose-950/50 dark:hover:text-rose-450 rounded text-zinc-500 transition-colors cursor-pointer"
-              title={t("deleteNode")}
-            >
-              <TrashIcon className="size-3.5" />
-            </button>
-          </div>
+          {/* Row actions */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button variant="ghost" size="icon-sm" className="cursor-pointer">
+                  <DotsThreeIcon weight="bold" className="size-4" />
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onEdit(node)} className="cursor-pointer">
+                <PencilSimpleIcon className="mr-2 size-4" />
+                {t("editNode")}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {node.status === CatalogNodeStatus.INACTIVE && (
+                <DropdownMenuItem onClick={() => onToggleStatus(node)} className="cursor-pointer">
+                  <CheckCircleIcon className="mr-2 size-4 text-emerald-500" />
+                  Activate
+                </DropdownMenuItem>
+              )}
+              {node.status === CatalogNodeStatus.ACTIVE && (
+                <DropdownMenuItem onClick={() => onToggleStatus(node)} className="cursor-pointer">
+                  <PowerIcon className="mr-2 size-4" />
+                  Deactivate
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onClick={() => onDelete(node)} className="cursor-pointer">
+                <TrashIcon className="mr-2 size-4" />
+                {t("deleteNode")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
       {/* Recursive children drawer */}
-      {hasChildren && expanded && (
-        <div className="pl-6 border-l-2 border-zinc-100 dark:border-zinc-800 ml-3 space-y-1.5 pt-0.5">
-          {node.children.map((child) => (
-            <CategoryTreeNode
-              key={child.id}
-              node={child}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onToggleStatus={onToggleStatus}
-            />
-          ))}
-        </div>
+      {hasChildren && (
+        <CollapsibleContent>
+          <div className="pl-6 border-l-2 border-zinc-100 dark:border-zinc-800 ml-3 space-y-1.5 pt-0.5">
+            {node.children.map((child) => (
+              <CategoryTreeNode
+                key={child.id}
+                node={child}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onToggleStatus={onToggleStatus}
+              />
+            ))}
+          </div>
+        </CollapsibleContent>
       )}
-    </div>
+    </Collapsible>
   )
 }

@@ -2,12 +2,20 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { CircleNotch } from "@phosphor-icons/react"
+import { ArrowLeftIcon, CircleNotch } from "@phosphor-icons/react"
 import type { VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Breadcrumb,
+  BreadcrumbItem as BreadcrumbItemUI,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 
 export interface BreadcrumbItem {
   label: string
@@ -39,6 +47,10 @@ export interface PageHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElemen
   children?: React.ReactNode
   isLoading?: boolean
   disabled?: boolean
+  /** Renders a back button to the left of the title. Pass a URL to navigate via `Link`, or a function for custom handling (e.g. `router.back()`). */
+  backHref?: string
+  onBack?: () => void
+  backAriaLabel?: string
 }
 
 export function PageHeader({
@@ -51,9 +63,41 @@ export function PageHeader({
   children,
   isLoading = false,
   disabled = false,
+  backHref,
+  onBack,
+  backAriaLabel = "Go back",
   className,
   ...props
 }: PageHeaderProps) {
+  const renderBackButton = () => {
+    if (!backHref && !onBack) return null
+
+    if (backHref) {
+      return (
+        <Link
+          href={backHref}
+          className={cn(buttonVariants({ variant: "outline", size: "icon" }), "shrink-0")}
+          aria-label={backAriaLabel}
+        >
+          <ArrowLeftIcon className="size-4" aria-hidden="true" />
+        </Link>
+      )
+    }
+
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        onClick={onBack}
+        className="shrink-0"
+        aria-label={backAriaLabel}
+      >
+        <ArrowLeftIcon className="size-4" aria-hidden="true" />
+      </Button>
+    )
+  }
+
   const renderBreadcrumbs = () => {
     if (!breadcrumbs) return null
 
@@ -63,39 +107,35 @@ export function PageHeader({
 
     if (Array.isArray(breadcrumbs)) {
       return (
-        <nav
-          className="mb-2 flex items-center space-x-1.5 text-xs font-medium text-muted-foreground/80"
-          aria-label="Breadcrumb"
-        >
-          {breadcrumbs.map((item, index) => {
-            const isLast = index === breadcrumbs.length - 1
-            const isActive = item.active || isLast
+        <Breadcrumb className="mb-2">
+          <BreadcrumbList className="flex-nowrap gap-1.5 text-xs font-medium text-muted-foreground/80">
+            {breadcrumbs.map((item, index) => {
+              const isLast = index === breadcrumbs.length - 1
+              const isActive = item.active || isLast
 
-            return (
-              <React.Fragment key={item.label}>
-                {index > 0 && (
-                  <span className="mx-1 select-none text-muted-foreground/30">/</span>
-                )}
-                {item.href && !isActive ? (
-                  <Link
-                    href={item.href}
-                    className="cursor-pointer hover:text-foreground transition-colors"
-                  >
-                    {item.label}
-                  </Link>
-                ) : (
-                  <span
-                    className={cn(
-                      isActive ? "font-semibold text-foreground" : "",
+              return (
+                <React.Fragment key={item.label}>
+                  {index > 0 && (
+                    <BreadcrumbSeparator className="mx-0 select-none text-muted-foreground/30 [&>svg]:hidden">
+                      /
+                    </BreadcrumbSeparator>
+                  )}
+                  <BreadcrumbItemUI>
+                    {item.href && !isActive ? (
+                      <BreadcrumbLink render={<Link href={item.href}>{item.label}</Link>} />
+                    ) : isActive ? (
+                      <BreadcrumbPage className="font-semibold text-foreground">
+                        {item.label}
+                      </BreadcrumbPage>
+                    ) : (
+                      <span>{item.label}</span>
                     )}
-                  >
-                    {item.label}
-                  </span>
-                )}
-              </React.Fragment>
-            )
-          })}
-        </nav>
+                  </BreadcrumbItemUI>
+                </React.Fragment>
+              )
+            })}
+          </BreadcrumbList>
+        </Breadcrumb>
       )
     }
 
@@ -179,7 +219,10 @@ export function PageHeader({
       >
         <div className="flex-1 space-y-2">
           {breadcrumbs && <Skeleton className="h-4 w-32" />}
-          <Skeleton className="h-9 w-48" />
+          <div className="flex items-center gap-3">
+            {(backHref || onBack) && <Skeleton className="size-9 shrink-0 rounded-md" />}
+            <Skeleton className="h-9 w-48" />
+          </div>
           {description && <Skeleton className="h-5 w-80" />}
         </div>
         <div className="flex items-center gap-2 mt-2 md:mt-0">
@@ -202,13 +245,16 @@ export function PageHeader({
     >
       <div className="flex-1 min-w-0">
         {renderBreadcrumbs()}
-        {typeof title === "string" ? (
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground truncate">
-            {title}
-          </h1>
-        ) : (
-          title
-        )}
+        <div className="flex items-center gap-3">
+          {renderBackButton()}
+          {typeof title === "string" ? (
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground truncate">
+              {title}
+            </h1>
+          ) : (
+            title
+          )}
+        </div>
         {description && (
           typeof description === "string" ? (
             <p className="text-xs text-muted-foreground">{description}</p>

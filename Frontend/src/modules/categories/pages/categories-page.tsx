@@ -32,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CategoryTreeNode } from "../components/category-tree-node"
 import { useDebounce } from "@/hooks/use-debounce"
 import {
@@ -420,6 +421,13 @@ export function CategoriesPage() {
     ...Object.values(CatalogNodeStatus).map((s) => ({ label: s, value: s })),
   ]
 
+  // The tree view never returns deleted nodes, so the deleted view always
+  // forces the table view — regardless of the last-selected `activeView`
+  // (e.g. a direct link landing on `?deleted=true` while `activeView` is
+  // still at its default "tree"). This mirrors the original render-time
+  // `!showDeleted && activeView === "tree"` guard.
+  const effectiveView = showDeleted ? "table" : activeView
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -432,89 +440,83 @@ export function CategoriesPage() {
         }}
       />
 
-      {/* Shared FilterBar Component */}
-      <FilterBar
-        search={searchInput}
-        onSearchChange={setSearchInput}
-        searchPlaceholder={t("searchPlaceholder")}
-        status={statusParam}
-        onStatusChange={(val) => handleFilterChange({ status: val === "all" ? null : val })}
-        statusOptions={statusOptions}
-        hasActiveFilters={hasActiveFilters}
-        onClearAll={handleClearAllFilters}
-        activeFilterChips={activeFilterChips}
+      <Tabs
+        value={effectiveView}
+        onValueChange={(value) => setActiveView(value as typeof activeView)}
+        className="gap-6"
       >
-        <Button
-          type="button"
-          variant={showDeleted ? "default" : "outline"}
-          size="sm"
-          onClick={() => handleToggleDeletedView(!showDeleted)}
-          className="cursor-pointer"
+        {/* Shared FilterBar Component */}
+        <FilterBar
+          search={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder={t("searchPlaceholder")}
+          status={statusParam}
+          onStatusChange={(val) => handleFilterChange({ status: val === "all" ? null : val })}
+          statusOptions={statusOptions}
+          hasActiveFilters={hasActiveFilters}
+          onClearAll={handleClearAllFilters}
+          activeFilterChips={activeFilterChips}
         >
-          <TrashIcon className="mr-2 size-4" />
-          {showDeleted ? "Viewing Deleted" : "Show Deleted"}
-        </Button>
+          <Button
+            type="button"
+            variant={showDeleted ? "default" : "outline"}
+            size="sm"
+            onClick={() => handleToggleDeletedView(!showDeleted)}
+            className="cursor-pointer"
+          >
+            <TrashIcon className="mr-2 size-4" />
+            {showDeleted ? "Viewing Deleted" : "Show Deleted"}
+          </Button>
 
-        {/* Toggle view tabs inside the search flex bar — the tree view never
-            includes deleted nodes, so it's disabled while viewing deleted. */}
-        {!showDeleted && (
-          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl self-start md:self-auto sm:ml-auto">
-            <button
-              onClick={() => setActiveView("tree")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${activeView === "tree"
-                ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-white"
-                : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
-                }`}
-            >
-              <SquaresFourIcon className="size-4" />
-              {t("tabTree")}
-            </button>
-            <button
-              onClick={() => setActiveView("table")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${activeView === "table"
-                ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-white"
-                : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
-                }`}
-            >
-              <ListIcon className="size-4" />
-              {t("tabTable")}
-            </button>
-          </div>
-        )}
-      </FilterBar>
+          {/* Toggle view tabs inside the search flex bar — the tree view never
+              includes deleted nodes, so it's hidden while viewing deleted. */}
+          {!showDeleted && (
+            <TabsList className="self-start md:self-auto sm:ml-auto">
+              <TabsTrigger value="tree">
+                <SquaresFourIcon className="size-4" />
+                {t("tabTree")}
+              </TabsTrigger>
+              <TabsTrigger value="table">
+                <ListIcon className="size-4" />
+                {t("tabTable")}
+              </TabsTrigger>
+            </TabsList>
+          )}
+        </FilterBar>
 
-      {/* Main Card View */}
-      <Card className="p-0">
-        {!showDeleted && activeView === "tree" ? (
-          <CardContent className="p-0">
-            {treeQuery.isLoading ? (
-              <div className="space-y-4">
-                {[...Array(5)].map((_, idx) => (
-                  <div key={idx} className="h-8 bg-zinc-100 dark:bg-zinc-800 animate-pulse rounded-lg w-full" />
-                ))}
-              </div>
-            ) : !treeQuery.data || treeQuery.data.length === 0 ? (
-              <div className="text-center py-12">
-                <SquaresFourIcon className="size-12 mx-auto text-zinc-300 mb-3" />
-                <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{t("emptyStateTitle")}</h3>
-                <p className="text-xs text-zinc-400 mt-1">{t("emptyStateDescription")}</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {treeQuery.data.map((node) => (
-                  <CategoryTreeNode
-                    key={node.id}
-                    node={node}
-                    onEdit={handleEdit}
-                    onDelete={handleDeleteTrigger}
-                    onToggleStatus={handleToggleStatus}
-                  />
-                ))}
-              </div>
-            )}
-          </CardContent>
-        ) : (
-          <>
+        {/* Main Card View */}
+        <Card className="p-0">
+          <TabsContent value="tree">
+            <CardContent className="p-0">
+              {treeQuery.isLoading ? (
+                <div className="space-y-4">
+                  {[...Array(5)].map((_, idx) => (
+                    <div key={idx} className="h-8 bg-zinc-100 dark:bg-zinc-800 animate-pulse rounded-lg w-full" />
+                  ))}
+                </div>
+              ) : !treeQuery.data || treeQuery.data.length === 0 ? (
+                <div className="text-center py-12">
+                  <SquaresFourIcon className="size-12 mx-auto text-zinc-300 mb-3" />
+                  <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{t("emptyStateTitle")}</h3>
+                  <p className="text-xs text-zinc-400 mt-1">{t("emptyStateDescription")}</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {treeQuery.data.map((node) => (
+                    <CategoryTreeNode
+                      key={node.id}
+                      node={node}
+                      onEdit={handleEdit}
+                      onDelete={handleDeleteTrigger}
+                      onToggleStatus={handleToggleStatus}
+                    />
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </TabsContent>
+
+          <TabsContent value="table">
             <CardContent className="p-0">
               <DataTable
                 columns={columns}
@@ -544,9 +546,9 @@ export function CategoriesPage() {
                 />
               </CardFooter>
             )}
-          </>
-        )}
-      </Card>
+          </TabsContent>
+        </Card>
+      </Tabs>
 
       {/* Shared BulkActionsToolbar — no bulk-restore endpoint exists, so bulk
           actions are only offered in the default (non-deleted) view. */}

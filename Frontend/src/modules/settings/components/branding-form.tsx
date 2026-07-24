@@ -1,6 +1,8 @@
 "use client"
 
 import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { CircleNotch } from "@phosphor-icons/react"
@@ -8,11 +10,27 @@ import { CircleNotch } from "@phosphor-icons/react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field"
 import { useUpdateSettingsGroupMutation } from "../hooks/use-settings"
 import { SettingGroup } from "../enums/settings-group"
 import type { BrandingSettings } from "../types/settings-types"
 import type { ApiErrorPayload } from "@/lib/axios"
+
+const logoGroupSchema = z.object({
+  lightLogo: z.string().min(1, "Light logo URL is required").url("Enter a valid URL"),
+  darkLogo: z.string().min(1, "Dark logo URL is required").url("Enter a valid URL"),
+})
+
+const brandingFormSchema = z.object({
+  platformDisplayName: z.string().min(1, "Platform display name is required"),
+  admin: logoGroupSchema,
+  customer: logoGroupSchema,
+  delivery: logoGroupSchema,
+  browser: z.object({
+    title: z.string().min(1, "Browser title is required"),
+    favicon: z.string().min(1, "Favicon URL is required").url("Enter a valid URL"),
+  }),
+})
 
 interface BrandingFormProps {
   initialValues: BrandingSettings
@@ -23,6 +41,7 @@ export function BrandingForm({ initialValues }: BrandingFormProps) {
   const { mutate, isPending } = useUpdateSettingsGroupMutation()
 
   const { control, handleSubmit } = useForm<BrandingSettings>({
+    resolver: zodResolver(brandingFormSchema),
     defaultValues: {
       platformDisplayName: initialValues.platformDisplayName || "",
       admin: {
@@ -66,7 +85,7 @@ export function BrandingForm({ initialValues }: BrandingFormProps) {
           <CardDescription>{t("brandingDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={onSubmit} className="space-y-8">
+          <form onSubmit={onSubmit} noValidate className="space-y-8">
             <FieldSet>
               <div className="flex justify-between items-center border-b pb-2 mb-4">
                 <FieldLegend>{t("branding.globalSection")}</FieldLegend>
@@ -78,11 +97,11 @@ export function BrandingForm({ initialValues }: BrandingFormProps) {
                 <Controller
                   name="platformDisplayName"
                   control={control}
-                  rules={{ required: true }}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel htmlFor={field.name}>{t("branding.platformDisplayName")}</FieldLabel>
                       <Input {...field} id={field.name} />
+                      {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                     </Field>
                   )}
                 />
@@ -101,11 +120,11 @@ export function BrandingForm({ initialValues }: BrandingFormProps) {
                   <Controller
                     name="admin.lightLogo"
                     control={control}
-                    rules={{ required: true }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("branding.lightLogo")}</FieldLabel>
                         <Input {...field} type="url" id={field.name} />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />
@@ -113,11 +132,11 @@ export function BrandingForm({ initialValues }: BrandingFormProps) {
                   <Controller
                     name="admin.darkLogo"
                     control={control}
-                    rules={{ required: true }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("branding.darkLogo")}</FieldLabel>
                         <Input {...field} type="url" id={field.name} />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />
@@ -137,11 +156,11 @@ export function BrandingForm({ initialValues }: BrandingFormProps) {
                   <Controller
                     name="customer.lightLogo"
                     control={control}
-                    rules={{ required: true }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("branding.lightLogo")}</FieldLabel>
                         <Input {...field} type="url" id={field.name} />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />
@@ -149,11 +168,11 @@ export function BrandingForm({ initialValues }: BrandingFormProps) {
                   <Controller
                     name="customer.darkLogo"
                     control={control}
-                    rules={{ required: true }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("branding.darkLogo")}</FieldLabel>
                         <Input {...field} type="url" id={field.name} />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />
@@ -173,11 +192,11 @@ export function BrandingForm({ initialValues }: BrandingFormProps) {
                   <Controller
                     name="delivery.lightLogo"
                     control={control}
-                    rules={{ required: true }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("branding.lightLogo")}</FieldLabel>
                         <Input {...field} type="url" id={field.name} />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />
@@ -185,11 +204,11 @@ export function BrandingForm({ initialValues }: BrandingFormProps) {
                   <Controller
                     name="delivery.darkLogo"
                     control={control}
-                    rules={{ required: true }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("branding.darkLogo")}</FieldLabel>
                         <Input {...field} type="url" id={field.name} />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />
@@ -209,11 +228,11 @@ export function BrandingForm({ initialValues }: BrandingFormProps) {
                   <Controller
                     name="browser.title"
                     control={control}
-                    rules={{ required: true }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("branding.browserTitle")}</FieldLabel>
                         <Input {...field} id={field.name} />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />
@@ -221,11 +240,11 @@ export function BrandingForm({ initialValues }: BrandingFormProps) {
                   <Controller
                     name="browser.favicon"
                     control={control}
-                    rules={{ required: true }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("branding.favicon")}</FieldLabel>
                         <Input {...field} type="url" id={field.name} />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />

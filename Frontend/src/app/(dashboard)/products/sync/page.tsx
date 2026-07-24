@@ -16,6 +16,14 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table"
 import { useSyncStockMutation } from "@/modules/products/hooks/use-products"
 import type { StockSyncResult } from "@/modules/products/types/product"
 import type { ApiErrorPayload } from "@/lib/axios"
@@ -223,26 +231,26 @@ export default function StockSyncPage() {
                   Unmatched Lines Log
                 </h3>
                 <div className="max-h-60 overflow-y-auto border border-zinc-200 dark:border-zinc-800 rounded-lg">
-                  <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
-                    <thead className="bg-zinc-50 dark:bg-zinc-900">
-                      <tr>
-                        <th className="px-4 py-2 text-left text-xs font-bold text-muted-foreground">Line</th>
-                        <th className="px-4 py-2 text-left text-xs font-bold text-muted-foreground">Identifier</th>
-                        <th className="px-4 py-2 text-left text-xs font-bold text-muted-foreground">Reason</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
+                  <Table>
+                    <TableHeader className="bg-zinc-50 dark:bg-zinc-900">
+                      <TableRow>
+                        <TableHead className="px-4 py-2 text-left text-xs font-bold text-muted-foreground">Line</TableHead>
+                        <TableHead className="px-4 py-2 text-left text-xs font-bold text-muted-foreground">Identifier</TableHead>
+                        <TableHead className="px-4 py-2 text-left text-xs font-bold text-muted-foreground">Reason</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody className="text-xs">
                       {syncReport.unmatchedList.map((err, idx) => (
-                        <tr key={idx}>
-                          <td className="px-4 py-2 font-mono text-muted-foreground">{err.line}</td>
-                          <td className="px-4 py-2 font-mono">
+                        <TableRow key={idx}>
+                          <TableCell className="px-4 py-2 font-mono text-muted-foreground">{err.line}</TableCell>
+                          <TableCell className="px-4 py-2 font-mono">
                             {err.sku ? `SKU: ${err.sku}` : "N/A"}
-                          </td>
-                          <td className="px-4 py-2 text-amber-600">{err.reason}</td>
-                        </tr>
+                          </TableCell>
+                          <TableCell className="px-4 py-2 text-amber-600">{err.reason}</TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
                 </div>
               </div>
             )}

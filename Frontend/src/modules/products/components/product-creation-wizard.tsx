@@ -1,24 +1,40 @@
 "use client"
 
 import * as React from "react"
-import { useForm, useFieldArray } from "react-hook-form"
+import { useForm, useFieldArray, Controller } from "react-hook-form"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {
   CircleNotchIcon,
   PlusIcon,
   TrashIcon,
-  ArrowLeftIcon,
   ArrowRightIcon,
   CheckIcon,
   TagIcon,
 } from "@phosphor-icons/react"
 
+import { PageHeader } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { useCreateProductMutation, useBadgesQuery } from "../hooks/use-products"
 import { useCategoriesQuery } from "@/modules/categories/hooks/use-categories"
 import { useBrandsQuery } from "@/modules/brands/hooks/use-brands"
@@ -222,18 +238,11 @@ export function ProductCreationWizard() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      <div className="flex items-center gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon-sm"
-          onClick={() => router.push("/products")}
-          className="cursor-pointer"
-        >
-          <ArrowLeftIcon className="size-4" />
-        </Button>
-        <h1 className="text-xl font-bold tracking-tight">Create Product Wizard</h1>
-      </div>
+      <PageHeader
+        title="Create Product Wizard"
+        description="Set up a new product's catalog details, media, variants, and stock allocation."
+        backHref="/products"
+      />
 
       {/* Progress indicators bar */}
       <div className="bg-zinc-50 dark:bg-zinc-900 border rounded-lg p-4 grid grid-cols-5 gap-2">
@@ -282,80 +291,134 @@ export function ProductCreationWizard() {
                 </div>
 
                 <div>
-                  <Field data-invalid={!!errors.categoryId}>
-                    <FieldLabel htmlFor="categoryId">Category *</FieldLabel>
-                    <select
-                      id="categoryId"
-                      {...register("categoryId", { required: "Category is required" })}
-                      className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
-                    >
-                      <option value="">Select Category...</option>
-                      {categoriesData?.nodes.map((c: any) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                    <FieldError errors={[{ message: getErrorMessage(errors.categoryId) }]} />
-                  </Field>
+                  <Controller
+                    name="categoryId"
+                    control={control}
+                    rules={{ required: "Category is required" }}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="categoryId">Category *</FieldLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          items={categoriesData?.nodes.map((c: any) => ({ value: c.id, label: c.name })) ?? []}
+                        >
+                          <SelectTrigger id="categoryId" className="w-full">
+                            <SelectValue placeholder="Select Category..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categoriesData?.nodes.map((c: any) => (
+                              <SelectItem key={c.id} value={c.id}>
+                                {c.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FieldError errors={[{ message: fieldState.error?.message }]} />
+                      </Field>
+                    )}
+                  />
                 </div>
 
                 <div>
-                  <Field>
-                    <FieldLabel htmlFor="subCategoryId">Sub Category (Optional)</FieldLabel>
-                    <select
-                      id="subCategoryId"
-                      {...register("subCategoryId")}
-                      className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
-                    >
-                      <option value="">Select Sub Category...</option>
-                      {categoriesData?.nodes
-                        .filter((c: any) => c.parentId === watch("categoryId") && watch("categoryId") !== "")
-                        .map((c: any) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                    </select>
-                  </Field>
+                  <Controller
+                    name="subCategoryId"
+                    control={control}
+                    render={({ field }) => {
+                      const categoryIdValue = watch("categoryId")
+                      const subOptions = categoriesData?.nodes.filter(
+                        (c: any) => c.parentId === categoryIdValue && categoryIdValue !== ""
+                      ) || []
+                      return (
+                        <Field>
+                          <FieldLabel htmlFor="subCategoryId">Sub Category (Optional)</FieldLabel>
+                          <Select
+                            value={field.value || "none"}
+                            onValueChange={(val) => field.onChange(val === "none" ? "" : val)}
+                            items={[
+                              { value: "none", label: "None" },
+                              ...subOptions.map((c: any) => ({ value: c.id, label: c.name })),
+                            ]}
+                          >
+                            <SelectTrigger id="subCategoryId" className="w-full">
+                              <SelectValue placeholder="Select Sub Category..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              {subOptions.map((c: any) => (
+                                <SelectItem key={c.id} value={c.id}>
+                                  {c.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </Field>
+                      )
+                    }}
+                  />
                 </div>
 
                 <div>
-                  <Field data-invalid={!!errors.brandId}>
-                    <FieldLabel htmlFor="brandId">Brand *</FieldLabel>
-                    <select
-                      id="brandId"
-                      {...register("brandId", { required: "Brand is required" })}
-                      className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
-                    >
-                      <option value="">Select Brand...</option>
-                      {brandsData?.brands.map((b: any) => (
-                        <option key={b.id} value={b.id}>
-                          {b.name}
-                        </option>
-                      ))}
-                    </select>
-                    <FieldError errors={[{ message: getErrorMessage(errors.brandId) }]} />
-                  </Field>
+                  <Controller
+                    name="brandId"
+                    control={control}
+                    rules={{ required: "Brand is required" }}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="brandId">Brand *</FieldLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          items={brandsData?.brands.map((b: any) => ({ value: b.id, label: b.name })) ?? []}
+                        >
+                          <SelectTrigger id="brandId" className="w-full">
+                            <SelectValue placeholder="Select Brand..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {brandsData?.brands.map((b: any) => (
+                              <SelectItem key={b.id} value={b.id}>
+                                {b.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FieldError errors={[{ message: fieldState.error?.message }]} />
+                      </Field>
+                    )}
+                  />
                 </div>
 
                 <div>
-                  <Field data-invalid={!!errors.taxId}>
-                    <FieldLabel htmlFor="taxId">Tax Rate Class *</FieldLabel>
-                    <select
-                      id="taxId"
-                      {...register("taxId", { required: "Tax Rate Class is required" })}
-                      className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
-                    >
-                      <option value="">Select Tax Rate...</option>
-                      {taxRatesData?.nodes.map((t: any) => (
-                        <option key={t.id} value={t.id}>
-                          {t.name} ({t.igst}%)
-                        </option>
-                      ))}
-                    </select>
-                    <FieldError errors={[{ message: getErrorMessage(errors.taxId) }]} />
-                  </Field>
+                  <Controller
+                    name="taxId"
+                    control={control}
+                    rules={{ required: "Tax Rate Class is required" }}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="taxId">Tax Rate Class *</FieldLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          items={taxRatesData?.nodes.map((t: any) => ({
+                            value: t.id,
+                            label: `${t.name} (${t.igst}%)`,
+                          })) ?? []}
+                        >
+                          <SelectTrigger id="taxId" className="w-full">
+                            <SelectValue placeholder="Select Tax Rate..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {taxRatesData?.nodes.map((t: any) => (
+                              <SelectItem key={t.id} value={t.id}>
+                                {t.name} ({t.igst}%)
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FieldError errors={[{ message: fieldState.error?.message }]} />
+                      </Field>
+                    )}
+                  />
                 </div>
 
                 <div className="col-span-2">
@@ -364,12 +427,9 @@ export function ProductCreationWizard() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 border rounded-lg bg-zinc-50 dark:bg-zinc-900/50">
                       {badgesData?.badges.map((badge: any) => (
                         <label key={badge.id} className="flex items-center gap-2 cursor-pointer text-xs font-semibold select-none">
-                          <input
-                            type="checkbox"
-                            value={badge.id}
-                            className="rounded text-amber-500 focus:ring-amber-500"
-                            onChange={(e) => {
-                              const checked = e.target.checked
+                          <Checkbox
+                            checked={(formValues.badgeIds || []).includes(badge.id)}
+                            onCheckedChange={(checked) => {
                               const current = formValues.badgeIds || []
                               if (checked) {
                                 setValue("badgeIds", [...current, badge.id])
@@ -377,7 +437,6 @@ export function ProductCreationWizard() {
                                 setValue("badgeIds", current.filter((id: string) => id !== badge.id))
                               }
                             }}
-                            checked={(formValues.badgeIds || []).includes(badge.id)}
                           />
                           <span
                             className="px-1.5 py-0.2 rounded text-[10px] uppercase font-extrabold"
@@ -504,19 +563,37 @@ export function ProductCreationWizard() {
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                       <div>
-                        <Field>
-                          <FieldLabel className="mb-1 block">Unit Type</FieldLabel>
-                          <select
-                            {...register(`variants.${index}.unit`)}
-                            className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
-                          >
-                            <option value="gm">Grams (GM)</option>
-                            <option value="kg">Kilograms (KG)</option>
-                            <option value="litre">Litres (LITRE)</option>
-                            <option value="ml">Millilitres (ML)</option>
-                            <option value="pcs">Pieces (PCS)</option>
-                          </select>
-                        </Field>
+                        <Controller
+                          name={`variants.${index}.unit`}
+                          control={control}
+                          render={({ field }) => (
+                            <Field>
+                              <FieldLabel className="mb-1 block">Unit Type</FieldLabel>
+                              <Select
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                items={[
+                                  { value: "gm", label: "Grams (GM)" },
+                                  { value: "kg", label: "Kilograms (KG)" },
+                                  { value: "litre", label: "Litres (LITRE)" },
+                                  { value: "ml", label: "Millilitres (ML)" },
+                                  { value: "pcs", label: "Pieces (PCS)" },
+                                ]}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="gm">Grams (GM)</SelectItem>
+                                  <SelectItem value="kg">Kilograms (KG)</SelectItem>
+                                  <SelectItem value="litre">Litres (LITRE)</SelectItem>
+                                  <SelectItem value="ml">Millilitres (ML)</SelectItem>
+                                  <SelectItem value="pcs">Pieces (PCS)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </Field>
+                          )}
+                        />
                       </div>
 
                       <div>
@@ -748,38 +825,38 @@ export function ProductCreationWizard() {
               <div className="space-y-3">
                 <h3 className="text-xs font-bold uppercase text-amber-600 dark:text-amber-400">2. Variant SKUs & Stocks</h3>
                 <div className="border rounded-lg overflow-hidden bg-white dark:bg-zinc-950">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-zinc-50 dark:bg-zinc-900/80 border-b border-zinc-200 dark:border-zinc-800 text-muted-foreground uppercase font-bold text-[10px] tracking-wider">
-                        <th className="py-2.5 px-4">Size Variant</th>
-                        <th className="py-2.5 px-4">SKU</th>
-                        <th className="py-2.5 px-4 text-right">MRP</th>
-                        <th className="py-2.5 px-4 text-right">Selling Price</th>
-                        <th className="py-2.5 px-4 text-center">App Stock</th>
-                        <th className="py-2.5 px-4 text-center">Local Stock</th>
-                        <th className="py-2.5 px-4 text-center">Reserved</th>
-                        <th className="py-2.5 px-4 text-center font-bold">Total Available</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 font-medium">
+                  <Table className="text-xs">
+                    <TableHeader>
+                      <TableRow className="bg-zinc-50 dark:bg-zinc-900/80 hover:bg-zinc-50 dark:hover:bg-zinc-900/80">
+                        <TableHead className="text-[10px] uppercase tracking-wider">Size Variant</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider">SKU</TableHead>
+                        <TableHead className="text-right text-[10px] uppercase tracking-wider">MRP</TableHead>
+                        <TableHead className="text-right text-[10px] uppercase tracking-wider">Selling Price</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-wider">App Stock</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-wider">Local Stock</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-wider">Reserved</TableHead>
+                        <TableHead className="text-center text-[10px] uppercase tracking-wider font-bold">Total Available</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody className="font-medium">
                       {variantsValues.map((v: any, idx: number) => {
                         const appSt = parseInt(v.appStock) || 0
                         const localSt = parseInt(v.localStock) || 0
                         return (
-                          <tr key={idx} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/20">
-                            <td className="py-3 px-4 text-foreground">{getVariantLabel(v.unit, v.unitValue)}</td>
-                            <td className="py-3 px-4 font-mono text-zinc-500">{v.sku}</td>
-                            <td className="py-3 px-4 text-right font-mono">₹{(parseFloat(v.mrp) || 0).toFixed(2)}</td>
-                            <td className="py-3 px-4 text-right font-mono text-emerald-600">₹{(parseFloat(v.sellingPrice) || 0).toFixed(2)}</td>
-                            <td className="py-3 px-4 text-center font-mono">{v.appStock || 0}</td>
-                            <td className="py-3 px-4 text-center font-mono">{v.localStock || 0}</td>
-                            <td className="py-3 px-4 text-center font-mono">{v.reservedStock || 0}</td>
-                            <td className="py-3 px-4 text-center font-mono text-amber-600 font-bold">{appSt + localSt} Units</td>
-                          </tr>
+                          <TableRow key={idx}>
+                            <TableCell className="text-foreground">{getVariantLabel(v.unit, v.unitValue)}</TableCell>
+                            <TableCell className="font-mono text-zinc-500">{v.sku}</TableCell>
+                            <TableCell className="text-right font-mono">₹{(parseFloat(v.mrp) || 0).toFixed(2)}</TableCell>
+                            <TableCell className="text-right font-mono text-emerald-600">₹{(parseFloat(v.sellingPrice) || 0).toFixed(2)}</TableCell>
+                            <TableCell className="text-center font-mono">{v.appStock || 0}</TableCell>
+                            <TableCell className="text-center font-mono">{v.localStock || 0}</TableCell>
+                            <TableCell className="text-center font-mono">{v.reservedStock || 0}</TableCell>
+                            <TableCell className="text-center font-mono text-amber-600 font-bold">{appSt + localSt} Units</TableCell>
+                          </TableRow>
                         )
                       })}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
                 </div>
               </div>
             </div>

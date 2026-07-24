@@ -1,6 +1,8 @@
 "use client"
 
 import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { CircleNotch } from "@phosphor-icons/react"
@@ -8,11 +10,24 @@ import { CircleNotch } from "@phosphor-icons/react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Field, FieldGroup, FieldLabel, FieldSet, FieldDescription } from "@/components/ui/field"
+import { Switch } from "@/components/ui/switch"
+import { Field, FieldError, FieldGroup, FieldLabel, FieldSet, FieldDescription } from "@/components/ui/field"
 import { useUpdateSettingsGroupMutation } from "../hooks/use-settings"
 import { SettingGroup } from "../enums/settings-group"
 import type { ClientApplicationsSettings } from "../types/settings-types"
 import type { ApiErrorPayload } from "@/lib/axios"
+
+const appVersionConfigSchema = z.object({
+  minVersion: z.string().min(1, "Minimum version is required"),
+  latestVersion: z.string().min(1, "Latest version is required"),
+  forceUpdate: z.boolean(),
+})
+
+const clientApplicationsFormSchema = z.object({
+  customer: appVersionConfigSchema,
+  delivery: appVersionConfigSchema,
+  admin: appVersionConfigSchema,
+})
 
 interface ClientApplicationsFormProps {
   initialValues: ClientApplicationsSettings
@@ -23,6 +38,7 @@ export function ClientApplicationsForm({ initialValues }: ClientApplicationsForm
   const { mutate, isPending } = useUpdateSettingsGroupMutation()
 
   const { control, handleSubmit } = useForm<ClientApplicationsSettings>({
+    resolver: zodResolver(clientApplicationsFormSchema),
     defaultValues: {
       customer: {
         minVersion: initialValues.customer?.minVersion || "1.0.0",
@@ -78,11 +94,11 @@ export function ClientApplicationsForm({ initialValues }: ClientApplicationsForm
                   <Controller
                     name="customer.minVersion"
                     control={control}
-                    rules={{ required: true }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("clientApps.minVersion")}</FieldLabel>
                         <Input {...field} id={field.name} placeholder="e.g. 1.0.0" />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />
@@ -90,11 +106,11 @@ export function ClientApplicationsForm({ initialValues }: ClientApplicationsForm
                   <Controller
                     name="customer.latestVersion"
                     control={control}
-                    rules={{ required: true }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("clientApps.latestVersion")}</FieldLabel>
                         <Input {...field} id={field.name} placeholder="e.g. 1.0.0" />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />
@@ -129,11 +145,11 @@ export function ClientApplicationsForm({ initialValues }: ClientApplicationsForm
                   <Controller
                     name="delivery.minVersion"
                     control={control}
-                    rules={{ required: true }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("clientApps.minVersion")}</FieldLabel>
                         <Input {...field} id={field.name} placeholder="e.g. 1.0.0" />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />
@@ -141,11 +157,11 @@ export function ClientApplicationsForm({ initialValues }: ClientApplicationsForm
                   <Controller
                     name="delivery.latestVersion"
                     control={control}
-                    rules={{ required: true }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("clientApps.latestVersion")}</FieldLabel>
                         <Input {...field} id={field.name} placeholder="e.g. 1.0.0" />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />
@@ -180,11 +196,11 @@ export function ClientApplicationsForm({ initialValues }: ClientApplicationsForm
                   <Controller
                     name="admin.minVersion"
                     control={control}
-                    rules={{ required: true }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("clientApps.minVersion")}</FieldLabel>
                         <Input {...field} id={field.name} placeholder="e.g. 1.0.0" />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />
@@ -192,11 +208,11 @@ export function ClientApplicationsForm({ initialValues }: ClientApplicationsForm
                   <Controller
                     name="admin.latestVersion"
                     control={control}
-                    rules={{ required: true }}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("clientApps.latestVersion")}</FieldLabel>
                         <Input {...field} id={field.name} placeholder="e.g. 1.0.0" />
+                        {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                       </Field>
                     )}
                   />
@@ -236,32 +252,5 @@ function FieldLegend({ children }: { children: React.ReactNode }) {
     <h3 className="text-sm font-semibold text-foreground">
       {children}
     </h3>
-  )
-}
-
-function Switch({
-  checked,
-  onCheckedChange,
-  id,
-}: {
-  checked: boolean
-  onCheckedChange: (checked: boolean) => void
-  id?: string
-}) {
-  return (
-    <button
-      type="button"
-      onClick={() => onCheckedChange(!checked)}
-      id={id}
-      className={`relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-        checked ? "bg-primary" : "bg-zinc-200 dark:bg-zinc-800"
-      }`}
-    >
-      <span
-        className={`pointer-events-none inline-block size-4.5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-          checked ? "translate-x-4.5" : "translate-x-0"
-        }`}
-      />
-    </button>
   )
 }

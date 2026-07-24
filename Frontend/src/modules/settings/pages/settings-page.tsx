@@ -13,9 +13,9 @@ import {
 
 import { PageHeader } from "@/components/layout/page-header"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useSettingsQuery } from "../hooks/use-settings"
 import { SettingGroup } from "../enums/settings-group"
-import { cn } from "@/lib/utils"
 import {
   GeneralForm,
   BrandingForm,
@@ -92,35 +92,24 @@ export function SettingsPage() {
           {t("fetchError")}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Settings Left Navigation */}
-          <div className="flex md:flex-col overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 gap-1 border-b md:border-b-0 md:border-r border-border pr-0 md:pr-4">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="gap-0">
+          <TabsList className="w-full justify-start overflow-x-auto">
             {tabs.map((tab) => {
               const Icon = tab.icon
-              const isActive = activeTab === tab.id
               return (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabChange(tab.id)}
-                  className={cn(
-                    "flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-full transition-all whitespace-nowrap cursor-pointer",
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )}
-                >
+                <TabsTrigger key={tab.id} value={tab.id}>
                   <Icon className="size-4" />
                   <span>{tab.label}</span>
-                </button>
+                </TabsTrigger>
               )
             })}
-          </div>
+          </TabsList>
 
           {/* Form Content Panel */}
-          <div className="md:col-span-3">
+          <TabsContent value={activeTab} className="mt-4">
             {renderActiveForm()}
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   )

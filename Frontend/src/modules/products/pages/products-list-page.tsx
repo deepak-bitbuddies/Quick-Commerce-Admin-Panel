@@ -29,6 +29,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { useDebounce } from "@/hooks/use-debounce"
 import {
   DataTable,
@@ -391,89 +406,87 @@ export function ProductsListPage() {
             Product: <span className="text-foreground">{p.name}</span>
           </span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
-            <thead>
-              <tr className="text-muted-foreground font-semibold text-left">
-                <th className="py-2 pr-4">Size (SKU)</th>
-                <th className="py-2 pr-4 text-right">MRP</th>
-                <th className="py-2 pr-4 text-right">App Price</th>
-                <th className="py-2 pr-4 text-center">App Stock</th>
-                <th className="py-2 pr-4 text-center">Local Stock</th>
-                <th className="py-2 pr-4 text-center">Available Stock</th>
-                <th className="py-2 pr-4 text-center font-normal">Min Stock</th>
-                <th className="py-2 pr-4 text-center font-normal">Reorder Lvl</th>
-                <th className="py-2 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {variants.map((v) => {
-                const availableStock = v.inventory?.availableStock ?? 0
-                const isLowStock = availableStock <= (v.inventory?.minStock ?? 0)
-                return (
-                  <tr key={v.id} className="hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30">
-                    <td className="py-2.5 pr-4 font-semibold text-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <span>{v.name}</span>
-                        {v.isDefault && (
-                          <span className="text-[9px] uppercase font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-1 py-0.2 rounded border border-amber-100 dark:border-amber-900/50">
-                            Default
-                          </span>
-                        )}
-                      </div>
-                      <code className="text-[10px] text-muted-foreground font-mono font-normal">{v.sku}</code>
-                    </td>
-                    <td className="py-2.5 pr-4 text-right font-mono text-zinc-600 dark:text-zinc-400">₹{(v.mrp / 100).toFixed(2)}</td>
-                    <td className="py-2.5 pr-4 text-right font-mono text-emerald-600 font-semibold">₹{(v.sellingPrice / 100).toFixed(2)}</td>
-                    <td className="py-2.5 pr-4 text-center font-mono">{v.inventory?.appStock ?? 0}</td>
-                    <td className="py-2.5 pr-4 text-center font-mono">{v.inventory?.localStock ?? 0}</td>
-                    <td className="py-2.5 pr-4 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <Badge variant={isLowStock ? "destructive" : "secondary"} className="font-mono text-[10px] font-bold h-5 px-2 py-0">
-                          {availableStock}
-                        </Badge>
-                        {isLowStock && (
-                          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-rose-500">
-                            <WarningOctagonIcon className="size-3" />
-                            Low
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-2.5 pr-4 text-center font-mono text-muted-foreground">{v.inventory?.minStock ?? 0}</td>
-                    <td className="py-2.5 pr-4 text-center font-mono text-muted-foreground">{v.inventory?.reorderLevel ?? 0}</td>
-                    <td className="py-2.5 text-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          render={
-                            <Button variant="ghost" size="icon-sm" className="cursor-pointer">
-                              <DotsThreeIcon weight="bold" className="size-4" />
-                            </Button>
-                          }
-                        />
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => router.push(`/products/inventory/${v.id}`)} className="cursor-pointer">
-                            <ClockIcon className="mr-2 size-4" />
-                            Manage Stock
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDuplicateVariant(v)} className="cursor-pointer">
-                            <CopyIcon className="mr-2 size-4" />
-                            Duplicate Variant
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleDeleteVariant(v)} className="text-rose-600 focus:text-rose-700 dark:text-rose-400 dark:focus:text-rose-300 focus:bg-rose-50 dark:focus:bg-rose-950/20 cursor-pointer">
-                            <TrashIcon className="mr-2 size-4" />
-                            Archive Variant
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+        <Table className="text-xs">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-muted-foreground font-semibold">Size (SKU)</TableHead>
+              <TableHead className="text-right text-muted-foreground font-semibold">MRP</TableHead>
+              <TableHead className="text-right text-muted-foreground font-semibold">App Price</TableHead>
+              <TableHead className="text-center text-muted-foreground font-semibold">App Stock</TableHead>
+              <TableHead className="text-center text-muted-foreground font-semibold">Local Stock</TableHead>
+              <TableHead className="text-center text-muted-foreground font-semibold">Available Stock</TableHead>
+              <TableHead className="text-center text-muted-foreground font-normal">Min Stock</TableHead>
+              <TableHead className="text-center text-muted-foreground font-normal">Reorder Lvl</TableHead>
+              <TableHead className="text-center text-muted-foreground font-semibold">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {variants.map((v) => {
+              const availableStock = v.inventory?.availableStock ?? 0
+              const isLowStock = availableStock <= (v.inventory?.minStock ?? 0)
+              return (
+                <TableRow key={v.id}>
+                  <TableCell className="font-semibold text-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <span>{v.name}</span>
+                      {v.isDefault && (
+                        <span className="text-[9px] uppercase font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-1 py-0.2 rounded border border-amber-100 dark:border-amber-900/50">
+                          Default
+                        </span>
+                      )}
+                    </div>
+                    <code className="text-[10px] text-muted-foreground font-mono font-normal">{v.sku}</code>
+                  </TableCell>
+                  <TableCell className="text-right font-mono text-zinc-600 dark:text-zinc-400">₹{(v.mrp / 100).toFixed(2)}</TableCell>
+                  <TableCell className="text-right font-mono text-emerald-600 font-semibold">₹{(v.sellingPrice / 100).toFixed(2)}</TableCell>
+                  <TableCell className="text-center font-mono">{v.inventory?.appStock ?? 0}</TableCell>
+                  <TableCell className="text-center font-mono">{v.inventory?.localStock ?? 0}</TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <Badge variant={isLowStock ? "destructive" : "secondary"} className="font-mono text-[10px] font-bold h-5 px-2 py-0">
+                        {availableStock}
+                      </Badge>
+                      {isLowStock && (
+                        <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-rose-500">
+                          <WarningOctagonIcon className="size-3" />
+                          Low
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center font-mono text-muted-foreground">{v.inventory?.minStock ?? 0}</TableCell>
+                  <TableCell className="text-center font-mono text-muted-foreground">{v.inventory?.reorderLevel ?? 0}</TableCell>
+                  <TableCell className="text-center">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button variant="ghost" size="icon-sm" className="cursor-pointer">
+                            <DotsThreeIcon weight="bold" className="size-4" />
+                          </Button>
+                        }
+                      />
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => router.push(`/products/inventory/${v.id}`)} className="cursor-pointer">
+                          <ClockIcon className="mr-2 size-4" />
+                          Manage Stock
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDuplicateVariant(v)} className="cursor-pointer">
+                          <CopyIcon className="mr-2 size-4" />
+                          Duplicate Variant
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleDeleteVariant(v)} className="text-rose-600 focus:text-rose-700 dark:text-rose-400 dark:focus:text-rose-300 focus:bg-rose-50 dark:focus:bg-rose-950/20 cursor-pointer">
+                          <TrashIcon className="mr-2 size-4" />
+                          Archive Variant
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
       </div>
     )
   }
@@ -493,24 +506,18 @@ export function ProductsListPage() {
       {/* Summary Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[
-          { title: "Total Products", value: stats?.totalProducts ?? 0, color: "text-zinc-900 dark:text-zinc-50", onClick: undefined, isClickable: false },
-          { title: "Active Products", value: stats?.activeProducts ?? 0, color: "text-emerald-600 dark:text-emerald-400", onClick: undefined, isClickable: false },
-          { title: "Inactive Products", value: stats?.inactiveProducts ?? 0, color: "text-amber-600 dark:text-amber-400", onClick: undefined, isClickable: false },
-          { title: "Draft Products", value: stats?.draftProducts ?? 0, color: "text-blue-600 dark:text-blue-400", onClick: undefined, isClickable: false },
-          { title: "Out of Stock", value: stats?.outOfStock ?? 0, color: "text-rose-600 dark:text-rose-400", onClick: undefined, isClickable: false },
-          { title: "Low Stock", value: stats?.lowStock ?? 0, color: "text-red-500 font-bold", onClick: undefined, isClickable: false },
+          { title: "Total Products", value: stats?.totalProducts ?? 0, color: "text-zinc-900 dark:text-zinc-50" },
+          { title: "Active Products", value: stats?.activeProducts ?? 0, color: "text-emerald-600 dark:text-emerald-400" },
+          { title: "Inactive Products", value: stats?.inactiveProducts ?? 0, color: "text-amber-600 dark:text-amber-400" },
+          { title: "Draft Products", value: stats?.draftProducts ?? 0, color: "text-blue-600 dark:text-blue-400" },
+          { title: "Out of Stock", value: stats?.outOfStock ?? 0, color: "text-rose-600 dark:text-rose-400" },
+          { title: "Low Stock", value: stats?.lowStock ?? 0, color: "text-red-500 font-bold" },
         ].map((c) => (
-          <Card 
-            key={c.title} 
-            onClick={c.onClick}
-            className={`p-4 shadow-sm border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex flex-col justify-between transition-all ${
-              c.isClickable 
-                ? "cursor-pointer hover:border-amber-500 hover:shadow-sm hover:scale-[1.02] active:scale-[0.98] border-dashed" 
-                : ""
-            }`}
-          >
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{c.title}</span>
-            <span className={`text-2xl font-mono font-bold mt-2 ${c.color}`}>{c.value}</span>
+          <Card key={c.title} className="shadow-sm">
+            <CardContent className="flex flex-col justify-between gap-2">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{c.title}</span>
+              <span className={`text-2xl font-mono font-bold ${c.color}`}>{c.value}</span>
+            </CardContent>
           </Card>
         ))}
       </div>
@@ -528,30 +535,40 @@ export function ProductsListPage() {
       >
         <div className="flex gap-2">
           {/* Categories select */}
-          <select
+          <Select
             value={categoryParam}
-            onChange={(e) => handleFilterChange({ categoryId: e.target.value === "all" ? null : e.target.value })}
-            className="h-9 px-3 py-1 text-xs font-semibold rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 cursor-pointer"
+            onValueChange={(val) => handleFilterChange({ categoryId: val === "all" ? null : val })}
+            items={categoryOptions}
           >
-            {categoryOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="h-9 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {categoryOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           {/* Brands select */}
-          <select
+          <Select
             value={brandParam}
-            onChange={(e) => handleFilterChange({ brandId: e.target.value === "all" ? null : e.target.value })}
-            className="h-9 px-3 py-1 text-xs font-semibold rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 cursor-pointer"
+            onValueChange={(val) => handleFilterChange({ brandId: val === "all" ? null : val })}
+            items={brandOptions}
           >
-            {brandOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="h-9 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {brandOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </FilterBar>
 

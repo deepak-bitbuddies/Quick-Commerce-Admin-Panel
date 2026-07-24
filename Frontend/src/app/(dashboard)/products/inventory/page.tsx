@@ -22,6 +22,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table"
 import { useDebounce } from "@/hooks/use-debounce"
 import {
   DataTable,
@@ -171,36 +186,36 @@ export default function InventoryDashboardPage() {
     return (
       <div className="bg-zinc-50/50 dark:bg-zinc-900/30 p-4 border border-zinc-150 dark:border-zinc-800 rounded-xl space-y-2">
         <div className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">SKUs Inventory Breakdown</div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-xs divide-y divide-zinc-200 dark:divide-zinc-800">
-            <thead>
-              <tr className="text-muted-foreground font-semibold">
-                <th className="py-2 pr-4">Variant Name / SKU</th>
-                <th className="py-2 pr-4 text-center">App Stock</th>
-                <th className="py-2 pr-4 text-center">Local Stock</th>
-                <th className="py-2 pr-4 text-center">Total Stock Balance</th>
-                <th className="py-2 pr-4 text-center">Reorder Threshold</th>
-                <th className="py-2 text-center">Configure Stock / Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {variants.map((v) => {
-                const isLowStock = (v.inventory?.availableStock ?? 0) <= (v.inventory?.minStock ?? 0)
-                return (
-                  <tr key={v.id} className="hover:bg-zinc-150/40 dark:hover:bg-zinc-800/40">
-                    <td className="py-2.5 pr-4 font-semibold text-foreground">
-                      <div>{v.name}</div>
-                      <code className="text-[10px] text-muted-foreground font-mono font-normal">{v.sku}</code>
-                    </td>
-                    <td className="py-2.5 pr-4 text-center font-mono">{v.inventory?.appStock ?? 0}</td>
-                    <td className="py-2.5 pr-4 text-center font-mono">{v.inventory?.localStock ?? 0}</td>
-                    <td className="py-2.5 pr-4 text-center">
-                      <Badge variant={isLowStock ? "destructive" : "secondary"} className="font-mono text-[10px] font-bold h-5 px-2 py-0">
-                        {v.inventory?.availableStock ?? 0} Units
-                      </Badge>
-                    </td>
-                    <td className="py-2.5 pr-4 text-center font-mono text-muted-foreground">{v.inventory?.minStock ?? 0}</td>
-                    <td className="py-2.5 text-center flex items-center justify-center">
+        <Table className="text-left text-xs">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="py-2 pr-4">Variant Name / SKU</TableHead>
+              <TableHead className="py-2 pr-4 text-center">App Stock</TableHead>
+              <TableHead className="py-2 pr-4 text-center">Local Stock</TableHead>
+              <TableHead className="py-2 pr-4 text-center">Total Stock Balance</TableHead>
+              <TableHead className="py-2 pr-4 text-center">Reorder Threshold</TableHead>
+              <TableHead className="py-2 text-center">Configure Stock / Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {variants.map((v) => {
+              const isLowStock = (v.inventory?.availableStock ?? 0) <= (v.inventory?.minStock ?? 0)
+              return (
+                <TableRow key={v.id}>
+                  <TableCell className="py-2.5 pr-4 font-semibold text-foreground">
+                    <div>{v.name}</div>
+                    <code className="text-[10px] text-muted-foreground font-mono font-normal">{v.sku}</code>
+                  </TableCell>
+                  <TableCell className="py-2.5 pr-4 text-center font-mono">{v.inventory?.appStock ?? 0}</TableCell>
+                  <TableCell className="py-2.5 pr-4 text-center font-mono">{v.inventory?.localStock ?? 0}</TableCell>
+                  <TableCell className="py-2.5 pr-4 text-center">
+                    <Badge variant={isLowStock ? "destructive" : "secondary"} className="font-mono text-[10px] font-bold h-5 px-2 py-0">
+                      {v.inventory?.availableStock ?? 0} Units
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="py-2.5 pr-4 text-center font-mono text-muted-foreground">{v.inventory?.minStock ?? 0}</TableCell>
+                  <TableCell className="py-2.5 text-center">
+                    <div className="flex items-center justify-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger
                           render={
@@ -216,13 +231,13 @@ export default function InventoryDashboardPage() {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
       </div>
     )
   }
@@ -256,29 +271,39 @@ export default function InventoryDashboardPage() {
         activeFilterChips={activeFilterChips}
       >
         <div className="flex gap-2">
-          <select
+          <Select
             value={categoryParam}
-            onChange={(e) => handleFilterChange({ categoryId: e.target.value === "all" ? null : e.target.value })}
-            className="h-9 px-3 py-1 text-xs font-semibold rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 cursor-pointer"
+            onValueChange={(val) => handleFilterChange({ categoryId: val === "all" || val === null ? null : val })}
+            items={categoryOptions}
           >
-            {categoryOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="h-9 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-xs font-semibold text-zinc-700 dark:text-zinc-300 cursor-pointer">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {categoryOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-          <select
+          <Select
             value={brandParam}
-            onChange={(e) => handleFilterChange({ brandId: e.target.value === "all" ? null : e.target.value })}
-            className="h-9 px-3 py-1 text-xs font-semibold rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 cursor-pointer"
+            onValueChange={(val) => handleFilterChange({ brandId: val === "all" || val === null ? null : val })}
+            items={brandOptions}
           >
-            {brandOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="h-9 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-xs font-semibold text-zinc-700 dark:text-zinc-300 cursor-pointer">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {brandOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </FilterBar>
 

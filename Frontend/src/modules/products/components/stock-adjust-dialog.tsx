@@ -26,12 +26,29 @@ import {
 } from "@/components/ui/field"
 import { Badge } from "@/components/ui/badge"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
   useAdjustStockMutation,
   useStockHistoryQuery,
   useTransferStockMutation,
 } from "../hooks/use-products"
 import type { Product, ProductVariant } from "../types/product"
 import type { ApiErrorPayload } from "@/lib/axios"
+import { StockTransferDirection } from "../enums/stock-transfer-direction"
 
 const adjustStockSchema = z.object({
   qtyChanged: z.coerce
@@ -144,32 +161,21 @@ export function StockAdjustDialog({
 
         <form onSubmit={onSubmit} className="space-y-4 pt-2">
           {/* Action selection */}
-          <div className="flex gap-2 p-1 bg-zinc-100 dark:bg-zinc-900 rounded-lg">
-            <button
-              type="button"
-              onClick={() => handleActionChange("add")}
-              className={`flex-1 flex items-center justify-center gap-1 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
-                actionType === "add"
-                  ? "bg-white dark:bg-zinc-800 shadow text-emerald-600 dark:text-emerald-400"
-                  : "text-zinc-500 hover:text-zinc-700"
-              }`}
-            >
-              <PlusIcon className="size-3.5" />
-              Add Stock
-            </button>
-            <button
-              type="button"
-              onClick={() => handleActionChange("deduct")}
-              className={`flex-1 flex items-center justify-center gap-1 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
-                actionType === "deduct"
-                  ? "bg-white dark:bg-zinc-800 shadow text-rose-600 dark:text-rose-400"
-                  : "text-zinc-500 hover:text-zinc-700"
-              }`}
-            >
-              <MinusIcon className="size-3.5" />
-              Remove Stock
-            </button>
-          </div>
+          <Tabs
+            value={actionType}
+            onValueChange={(value) => handleActionChange(value as "add" | "deduct")}
+          >
+            <TabsList className="w-full">
+              <TabsTrigger value="add" className="text-xs font-bold data-active:text-emerald-600 dark:data-active:text-emerald-400">
+                <PlusIcon className="size-3.5" />
+                Add Stock
+              </TabsTrigger>
+              <TabsTrigger value="deduct" className="text-xs font-bold data-active:text-rose-600 dark:data-active:text-rose-400">
+                <MinusIcon className="size-3.5" />
+                Remove Stock
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
 
           <div className="bg-zinc-50 dark:bg-zinc-900/50 p-3 rounded-lg border border-zinc-150 dark:border-zinc-800 text-center">
             <span className="text-[10px] uppercase font-bold text-muted-foreground">Current Available Stock</span>
@@ -200,13 +206,22 @@ export function StockAdjustDialog({
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>Target Stock Pool *</FieldLabel>
-                  <select
-                    {...field}
-                    className="h-10 w-full px-3 py-1 text-sm rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-foreground"
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    items={[
+                      { value: "localStock", label: "Local Store Stock (localStock)" },
+                      { value: "appStock", label: "App Store Stock (appStock)" },
+                    ]}
                   >
-                    <option value="localStock">Local Store Stock (localStock)</option>
-                    <option value="appStock">App Store Stock (appStock)</option>
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="localStock">Local Store Stock (localStock)</SelectItem>
+                      <SelectItem value="appStock">App Store Stock (appStock)</SelectItem>
+                    </SelectContent>
+                  </Select>
                   {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                 </Field>
               )}
@@ -219,25 +234,44 @@ export function StockAdjustDialog({
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>Adjustment Reason Type</FieldLabel>
-                  <select
-                    {...field}
-                    className="h-10 w-full px-3 py-1 text-sm rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-foreground"
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    items={
+                      actionType === "add"
+                        ? [
+                            { value: "PURCHASE", label: "Supplier Restock / Purchase (PURCHASE)" },
+                            { value: "RETURN", label: "Customer Return (RETURN)" },
+                            { value: "ORDER_CANCELLATION", label: "Order Cancellation (ORDER_CANCELLATION)" },
+                            { value: "MANUAL_ADJUSTMENT", label: "Manual adjustment / Restock (MANUAL_ADJUSTMENT)" },
+                          ]
+                        : [
+                            { value: "DAMAGE", label: "Broken / Damaged Stock (DAMAGE)" },
+                            { value: "EXPIRY", label: "Expired Product (EXPIRY)" },
+                            { value: "MANUAL_ADJUSTMENT", label: "Manual Shrinkage Correct (MANUAL_ADJUSTMENT)" },
+                          ]
+                    }
                   >
-                    {actionType === "add" ? (
-                      <>
-                        <option value="PURCHASE">Supplier Restock / Purchase (PURCHASE)</option>
-                        <option value="RETURN">Customer Return (RETURN)</option>
-                        <option value="ORDER_CANCELLATION">Order Cancellation (ORDER_CANCELLATION)</option>
-                        <option value="MANUAL_ADJUSTMENT">Manual adjustment / Restock (MANUAL_ADJUSTMENT)</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="DAMAGE">Broken / Damaged Stock (DAMAGE)</option>
-                        <option value="EXPIRY">Expired Product (EXPIRY)</option>
-                        <option value="MANUAL_ADJUSTMENT">Manual Shrinkage Correct (MANUAL_ADJUSTMENT)</option>
-                      </>
-                    )}
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {actionType === "add" ? (
+                        <>
+                          <SelectItem value="PURCHASE">Supplier Restock / Purchase (PURCHASE)</SelectItem>
+                          <SelectItem value="RETURN">Customer Return (RETURN)</SelectItem>
+                          <SelectItem value="ORDER_CANCELLATION">Order Cancellation (ORDER_CANCELLATION)</SelectItem>
+                          <SelectItem value="MANUAL_ADJUSTMENT">Manual adjustment / Restock (MANUAL_ADJUSTMENT)</SelectItem>
+                        </>
+                      ) : (
+                        <>
+                          <SelectItem value="DAMAGE">Broken / Damaged Stock (DAMAGE)</SelectItem>
+                          <SelectItem value="EXPIRY">Expired Product (EXPIRY)</SelectItem>
+                          <SelectItem value="MANUAL_ADJUSTMENT">Manual Shrinkage Correct (MANUAL_ADJUSTMENT)</SelectItem>
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
                   {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                 </Field>
               )}
@@ -312,17 +346,17 @@ export function StockHistoryDialog({
               No stock movements recorded yet for this SKU variant.
             </div>
           ) : (
-            <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
-              <thead className="bg-zinc-50 dark:bg-zinc-900 font-semibold text-muted-foreground sticky top-0">
-                <tr>
-                  <th className="px-4 py-2.5 text-left">Timestamp</th>
-                  <th className="px-4 py-2.5 text-left">Activity</th>
-                  <th className="px-4 py-2.5 text-center">Change</th>
-                  <th className="px-4 py-2.5 text-center">Balance</th>
-                  <th className="px-4 py-2.5 text-left">Author / Reason</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+            <Table className="text-xs">
+              <TableHeader className="bg-zinc-50 dark:bg-zinc-900 sticky top-0">
+                <TableRow>
+                  <TableHead className="text-muted-foreground font-semibold">Timestamp</TableHead>
+                  <TableHead className="text-muted-foreground font-semibold">Activity</TableHead>
+                  <TableHead className="text-center text-muted-foreground font-semibold">Change</TableHead>
+                  <TableHead className="text-center text-muted-foreground font-semibold">Balance</TableHead>
+                  <TableHead className="text-muted-foreground font-semibold">Author / Reason</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {history.map((tx) => {
                   const dateStr = new Date(tx.createdAt).toLocaleString(undefined, {
                     month: "short",
@@ -347,25 +381,25 @@ export function StockHistoryDialog({
                   }
 
                   return (
-                    <tr key={tx.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/30">
-                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                    <TableRow key={tx.id}>
+                      <TableCell className="text-muted-foreground whitespace-nowrap">
                         <div className="flex items-center gap-1">
                           <CalendarBlankIcon className="size-3.5" />
                           {dateStr}
                         </div>
-                      </td>
-                      <td className="px-4 py-3 font-semibold text-foreground">
+                      </TableCell>
+                      <TableCell className="font-semibold text-foreground">
                         <Badge variant={badgeColor} className={customBadgeClass}>
                           {tx.type.replace("_", " ")}
                         </Badge>
-                      </td>
-                      <td className={`px-4 py-3 text-center font-mono font-bold ${tx.qtyChanged > 0 ? "text-emerald-600" : "text-red-500"}`}>
+                      </TableCell>
+                      <TableCell className={`text-center font-mono font-bold ${tx.qtyChanged > 0 ? "text-emerald-600" : "text-red-500"}`}>
                         {tx.qtyChanged > 0 ? `+${tx.qtyChanged}` : tx.qtyChanged}
-                      </td>
-                      <td className="px-4 py-3 text-center font-mono font-semibold text-zinc-500">
+                      </TableCell>
+                      <TableCell className="text-center font-mono font-semibold text-zinc-500">
                         {tx.newStock}
-                      </td>
-                      <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                      </TableCell>
+                      <TableCell className="text-zinc-600 dark:text-zinc-400">
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-1 font-medium text-[10px] text-zinc-700 dark:text-zinc-300">
                             <UserIcon className="size-3" />
@@ -378,12 +412,12 @@ export function StockHistoryDialog({
                             </div>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           )}
         </div>
       </DialogContent>
@@ -393,7 +427,7 @@ export function StockHistoryDialog({
 
 const transferStockSchema = z.object({
   qty: z.coerce.number().int().positive("Transfer quantity must be positive"),
-  direction: z.enum(["APP_TO_LOCAL", "LOCAL_TO_APP"]),
+  direction: z.nativeEnum(StockTransferDirection),
   reason: z.string().max(200).optional(),
 })
 
@@ -423,7 +457,7 @@ export function StockTransferDialog({
     resolver: zodResolver(transferStockSchema) as any,
     defaultValues: {
       qty: 1,
-      direction: "APP_TO_LOCAL",
+      direction: StockTransferDirection.APP_TO_LOCAL,
       reason: "",
     },
   })
@@ -432,7 +466,7 @@ export function StockTransferDialog({
     if (open) {
       reset({
         qty: 1,
-        direction: "APP_TO_LOCAL",
+        direction: StockTransferDirection.APP_TO_LOCAL,
         reason: "",
       })
     }
@@ -508,13 +542,22 @@ export function StockTransferDialog({
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>Transfer Direction</FieldLabel>
-                  <select
-                    {...field}
-                    className="h-10 w-full px-3 py-1 text-sm rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-foreground"
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    items={[
+                      { value: StockTransferDirection.APP_TO_LOCAL, label: "Move App Stock ➔ Local Store Stock" },
+                      { value: StockTransferDirection.LOCAL_TO_APP, label: "Move Local Store Stock ➔ App Stock" },
+                    ]}
                   >
-                    <option value="APP_TO_LOCAL">Move App Stock ➔ Local Store Stock</option>
-                    <option value="LOCAL_TO_APP">Move Local Store Stock ➔ App Stock</option>
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={StockTransferDirection.APP_TO_LOCAL}>Move App Stock ➔ Local Store Stock</SelectItem>
+                      <SelectItem value={StockTransferDirection.LOCAL_TO_APP}>Move Local Store Stock ➔ App Stock</SelectItem>
+                    </SelectContent>
+                  </Select>
                   {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                 </Field>
               )}

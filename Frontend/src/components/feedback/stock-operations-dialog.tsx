@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { CircleNotchIcon, PlusIcon, MinusIcon, ArrowsLeftRightIcon } from "@phosphor-icons/react"
@@ -18,6 +18,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { StockTransferDirection } from "@/modules/products"
 
 const adjustStockFormSchema = z.object({
   qtyChanged: z.coerce.number().int().positive("Quantity must be a positive integer"),
@@ -29,7 +38,7 @@ const adjustStockFormSchema = z.object({
 
 const transferStockFormSchema = z.object({
   qtyChanged: z.coerce.number().int().positive("Quantity must be a positive integer"),
-  transferDirection: z.enum(["app_to_local", "local_to_app"]),
+  transferDirection: z.nativeEnum(StockTransferDirection),
   reason: z.string().optional(),
 })
 
@@ -66,9 +75,9 @@ export function StockOperationsDialog({
 
   const {
     register,
+    control,
     handleSubmit,
     setValue,
-    watch,
     reset,
     formState: { errors },
   } = useForm<any>({
@@ -77,7 +86,7 @@ export function StockOperationsDialog({
       qtyChanged: "",
       type: "PURCHASE",
       poolAffected: "localStock",
-      transferDirection: "local_to_app",
+      transferDirection: StockTransferDirection.LOCAL_TO_APP,
       reason: "",
       reference: "",
     },
@@ -96,7 +105,7 @@ export function StockOperationsDialog({
         qtyChanged: "",
         type: actionType === "add" ? "PURCHASE" : "DAMAGE",
         poolAffected: "localStock",
-        transferDirection: "local_to_app",
+        transferDirection: StockTransferDirection.LOCAL_TO_APP,
         reason: "",
         reference: "",
       })
@@ -123,9 +132,6 @@ export function StockOperationsDialog({
 
     await onConfirm(payload)
   }
-
-  const poolAffectedValue = watch("poolAffected")
-  const transferDirectionValue = watch("transferDirection")
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -173,74 +179,104 @@ export function StockOperationsDialog({
           {mode === "adjust" ? (
             <>
               {/* Action buttons (Add / Deduct) */}
-              <div className="flex gap-2 p-1 bg-zinc-100 dark:bg-zinc-900 rounded-lg">
-                <button
-                  type="button"
-                  onClick={() => handleActionChange("add")}
-                  className={`flex-1 flex items-center justify-center gap-1 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
-                    actionType === "add"
-                      ? "bg-white dark:bg-zinc-800 shadow text-emerald-600 dark:text-emerald-400"
-                      : "text-zinc-500 hover:text-zinc-700"
-                  }`}
-                  disabled={isLoading}
-                >
-                  <PlusIcon className="size-3.5" />
-                  Add Stock
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleActionChange("deduct")}
-                  className={`flex-1 flex items-center justify-center gap-1 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
-                    actionType === "deduct"
-                      ? "bg-white dark:bg-zinc-800 shadow text-rose-600 dark:text-rose-400"
-                      : "text-zinc-500 hover:text-zinc-700"
-                  }`}
-                  disabled={isLoading}
-                >
-                  <MinusIcon className="size-3.5" />
-                  Remove Stock
-                </button>
-              </div>
+              <Tabs
+                value={actionType}
+                onValueChange={(value) => handleActionChange(value as "add" | "deduct")}
+              >
+                <TabsList className="w-full">
+                  <TabsTrigger
+                    value="add"
+                    className="text-xs font-bold data-active:text-emerald-600 dark:data-active:text-emerald-400"
+                    disabled={isLoading}
+                  >
+                    <PlusIcon className="size-3.5" />
+                    Add Stock
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="deduct"
+                    className="text-xs font-bold data-active:text-rose-600 dark:data-active:text-rose-400"
+                    disabled={isLoading}
+                  >
+                    <MinusIcon className="size-3.5" />
+                    Remove Stock
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
 
               {/* Pool Affected Select */}
               <div className="space-y-1.5">
                 <Label htmlFor="poolAffected" className="text-xs font-bold">Target Stock Pool</Label>
-                <select
-                  id="poolAffected"
-                  value={poolAffectedValue}
-                  onChange={(e) => setValue("poolAffected", e.target.value)}
-                  disabled={isLoading}
-                  className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
-                >
-                  <option value="localStock">Local Stock Pool</option>
-                  <option value="appStock">App Stock Pool (Online Store)</option>
-                </select>
+                <Controller
+                  name="poolAffected"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={isLoading}
+                      items={[
+                        { value: "localStock", label: "Local Stock Pool" },
+                        { value: "appStock", label: "App Stock Pool (Online Store)" },
+                      ]}
+                    >
+                      <SelectTrigger id="poolAffected" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="localStock">Local Stock Pool</SelectItem>
+                        <SelectItem value="appStock">App Stock Pool (Online Store)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
 
               {/* Transaction Type Select */}
               <div className="space-y-1.5">
                 <Label htmlFor="tx-type" className="text-xs font-bold">Transaction Type / Reason Code</Label>
-                <select
-                  id="tx-type"
-                  value={watch("type")}
-                  onChange={(e) => setValue("type", e.target.value)}
-                  disabled={isLoading}
-                  className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
-                >
-                  {actionType === "add" ? (
-                    <>
-                      <option value="PURCHASE">Purchase / Restock</option>
-                      <option value="RETURN">Customer Return</option>
-                      <option value="MANUAL_ADJUSTMENT">Manual Adjustment In</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="DAMAGE">Damaged / Spoiled Goods</option>
-                      <option value="EXPIRY">Expired Product</option>
-                      <option value="MANUAL_ADJUSTMENT">Manual Adjustment Out</option>
-                    </>
+                <Controller
+                  name="type"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={isLoading}
+                      items={
+                        actionType === "add"
+                          ? [
+                              { value: "PURCHASE", label: "Purchase / Restock" },
+                              { value: "RETURN", label: "Customer Return" },
+                              { value: "MANUAL_ADJUSTMENT", label: "Manual Adjustment In" },
+                            ]
+                          : [
+                              { value: "DAMAGE", label: "Damaged / Spoiled Goods" },
+                              { value: "EXPIRY", label: "Expired Product" },
+                              { value: "MANUAL_ADJUSTMENT", label: "Manual Adjustment Out" },
+                            ]
+                      }
+                    >
+                      <SelectTrigger id="tx-type" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {actionType === "add" ? (
+                          <>
+                            <SelectItem value="PURCHASE">Purchase / Restock</SelectItem>
+                            <SelectItem value="RETURN">Customer Return</SelectItem>
+                            <SelectItem value="MANUAL_ADJUSTMENT">Manual Adjustment In</SelectItem>
+                          </>
+                        ) : (
+                          <>
+                            <SelectItem value="DAMAGE">Damaged / Spoiled Goods</SelectItem>
+                            <SelectItem value="EXPIRY">Expired Product</SelectItem>
+                            <SelectItem value="MANUAL_ADJUSTMENT">Manual Adjustment Out</SelectItem>
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
                   )}
-                </select>
+                />
               </div>
             </>
           ) : (
@@ -248,16 +284,29 @@ export function StockOperationsDialog({
               {/* Transfer direction selection */}
               <div className="space-y-1.5">
                 <Label htmlFor="transferDirection" className="text-xs font-bold">Transfer Direction</Label>
-                <select
-                  id="transferDirection"
-                  value={transferDirectionValue}
-                  onChange={(e) => setValue("transferDirection", e.target.value)}
-                  disabled={isLoading}
-                  className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
-                >
-                  <option value="local_to_app">Local Stock &rarr; App Stock (Move to Digital Store)</option>
-                  <option value="app_to_local">App Stock &rarr; Local Stock (Move to Shelves)</option>
-                </select>
+                <Controller
+                  name="transferDirection"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={isLoading}
+                      items={[
+                        { value: StockTransferDirection.LOCAL_TO_APP, label: "Local Stock → App Stock (Move to Digital Store)" },
+                        { value: StockTransferDirection.APP_TO_LOCAL, label: "App Stock → Local Stock (Move to Shelves)" },
+                      ]}
+                    >
+                      <SelectTrigger id="transferDirection" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={StockTransferDirection.LOCAL_TO_APP}>Local Stock &rarr; App Stock (Move to Digital Store)</SelectItem>
+                        <SelectItem value={StockTransferDirection.APP_TO_LOCAL}>App Stock &rarr; Local Stock (Move to Shelves)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
             </>
           )}

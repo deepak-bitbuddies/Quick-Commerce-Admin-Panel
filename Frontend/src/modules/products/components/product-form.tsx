@@ -15,6 +15,7 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Field,
   FieldError,
@@ -23,6 +24,13 @@ import {
   FieldSet,
 } from "@/components/ui/field"
 import { Card, CardContent } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useCreateProductMutation, useBadgesQuery } from "../hooks/use-products"
 import { useCategoriesQuery } from "@/modules/categories/hooks/use-categories"
 import { useBrandsQuery } from "@/modules/brands/hooks/use-brands"
@@ -105,7 +113,6 @@ export function ProductForm({ redirectPath = "/products" }: { redirectPath?: str
   const {
     control,
     handleSubmit,
-    register,
     formState: { isSubmitting, errors },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema) as any,
@@ -239,18 +246,22 @@ export function ProductForm({ redirectPath = "/products" }: { redirectPath?: str
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor={field.name}>Category *</FieldLabel>
-                    <select
-                      {...field}
-                      id={field.name}
-                      className="h-10 w-full px-3 py-1 text-sm rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-foreground"
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      items={categoriesData?.nodes.map((c) => ({ value: c.id, label: c.name })) ?? []}
                     >
-                      <option value="">Select Category</option>
-                      {categoriesData?.nodes.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger id={field.name} className="w-full">
+                        <SelectValue placeholder="Select Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categoriesData?.nodes.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                   </Field>
                 )}
@@ -263,18 +274,22 @@ export function ProductForm({ redirectPath = "/products" }: { redirectPath?: str
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor={field.name}>Brand (Company) *</FieldLabel>
-                    <select
-                      {...field}
-                      id={field.name}
-                      className="h-10 w-full px-3 py-1 text-sm rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-foreground"
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      items={brandsData?.brands.map((b) => ({ value: b.id, label: b.name })) ?? []}
                     >
-                      <option value="">Select Brand</option>
-                      {brandsData?.brands.map((b) => (
-                        <option key={b.id} value={b.id}>
-                          {b.name}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger id={field.name} className="w-full">
+                        <SelectValue placeholder="Select Brand" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {brandsData?.brands.map((b) => (
+                          <SelectItem key={b.id} value={b.id}>
+                            {b.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                   </Field>
                 )}
@@ -287,15 +302,24 @@ export function ProductForm({ redirectPath = "/products" }: { redirectPath?: str
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor={field.name}>Publish Status</FieldLabel>
-                    <select
-                      {...field}
-                      id={field.name}
-                      className="h-10 w-full px-3 py-1 text-sm rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-foreground"
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      items={[
+                        { value: "draft", label: "Draft" },
+                        { value: "active", label: "Active (Visible)" },
+                        { value: "inactive", label: "Inactive (Hidden)" },
+                      ]}
                     >
-                      <option value="draft">Draft</option>
-                      <option value="active">Active (Visible)</option>
-                      <option value="inactive">Inactive (Hidden)</option>
-                    </select>
+                      <SelectTrigger id={field.name} className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="active">Active (Visible)</SelectItem>
+                        <SelectItem value="inactive">Inactive (Hidden)</SelectItem>
+                      </SelectContent>
+                    </Select>
                     {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                   </Field>
                 )}
@@ -314,20 +338,26 @@ export function ProductForm({ redirectPath = "/products" }: { redirectPath?: str
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel htmlFor={field.name}>Product Badge (Optional)</FieldLabel>
                       <div className="flex gap-2 items-center">
-                        <select
-                          {...field}
-                          id={field.name}
-                          value={field.value || ""}
-                          onChange={(e) => field.onChange(e.target.value || null)}
-                          className="h-10 flex-1 px-3 py-1 text-sm rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-foreground"
+                        <Select
+                          value={field.value || "none"}
+                          onValueChange={(val) => field.onChange(val === "none" ? null : val)}
+                          items={[
+                            { value: "none", label: "No Badge" },
+                            ...activeBadges.map((b: any) => ({ value: b.id, label: b.name })),
+                          ]}
                         >
-                          <option value="">No Badge</option>
-                          {activeBadges.map((b: any) => (
-                            <option key={b.id} value={b.id}>
-                              {b.name}
-                            </option>
-                          ))}
-                        </select>
+                          <SelectTrigger id={field.name} className="flex-1 w-full">
+                            <SelectValue placeholder="No Badge" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">No Badge</SelectItem>
+                            {activeBadges.map((b: any) => (
+                              <SelectItem key={b.id} value={b.id}>
+                                {b.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         {selectedBadge && (
                           <span
                             className="inline-flex items-center px-2.5 py-1 rounded text-[10px] font-extrabold uppercase tracking-wide shrink-0 shadow-sm transition-all duration-300"
@@ -372,18 +402,26 @@ export function ProductForm({ redirectPath = "/products" }: { redirectPath?: str
                 control={control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid} className="col-span-2">
-                    <FieldLabel>Tax Rate Group *</FieldLabel>
-                    <select
-                      {...field}
-                      className="h-10 w-full px-3 py-1 text-sm rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-foreground"
+                    <FieldLabel htmlFor={field.name}>Tax Rate Group *</FieldLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      items={taxRatesData?.nodes.map((tr) => ({
+                        value: tr.id,
+                        label: `${tr.name} (CGST: ${tr.cgst}%, SGST: ${tr.sgst}%, IGST: ${tr.igst}%)`,
+                      })) ?? []}
                     >
-                      <option value="">Select a tax rate...</option>
-                      {taxRatesData?.nodes.map((tr) => (
-                        <option key={tr.id} value={tr.id}>
-                          {tr.name} (CGST: {tr.cgst}%, SGST: {tr.sgst}%, IGST: {tr.igst}%)
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger id={field.name} className="w-full">
+                        <SelectValue placeholder="Select a tax rate..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {taxRatesData?.nodes.map((tr) => (
+                          <SelectItem key={tr.id} value={tr.id}>
+                            {tr.name} (CGST: {tr.cgst}%, SGST: {tr.sgst}%, IGST: {tr.igst}%)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                   </Field>
                 )}
@@ -391,11 +429,16 @@ export function ProductForm({ redirectPath = "/products" }: { redirectPath?: str
 
               {/* Narcotic flag */}
               <div className="col-span-2 flex items-center gap-2 pt-6">
-                <input
-                  type="checkbox"
-                  id="narcotic"
-                  {...register("narcotic")}
-                  className="size-4 rounded border-zinc-300 dark:border-zinc-700 text-blue-600 focus:ring-blue-500"
+                <Controller
+                  name="narcotic"
+                  control={control}
+                  render={({ field }) => (
+                    <Checkbox
+                      id="narcotic"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
                 />
                 <label htmlFor="narcotic" className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                   Narcotic / Pharmacy Drug Classification

@@ -32,6 +32,23 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Checkbox } from "@/components/ui/checkbox"
 import { PageHeader } from "@/components/layout/page-header"
 import {
   DropdownMenu,
@@ -788,27 +805,27 @@ export default function ProductDetailPage({ params }: PageProps) {
       </div>
 
       {/* Detail Tabs menu bar */}
-      <div className="flex border-b border-zinc-200 dark:border-zinc-800 flex-wrap overflow-x-auto">
-        {(["overview", "variants", "inventory", "activity", "faqs", "reviews", "settings"] as TabType[]).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2.5 text-xs font-bold transition-all border-b-2 cursor-pointer capitalize whitespace-nowrap ${
-              activeTab === tab
-                ? "border-amber-500 text-amber-600 dark:text-amber-400 font-extrabold"
-                : "border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
-            }`}
-          >
-            {tab}
-            {tab === "variants" && ` (${product.variants?.length ?? 0})`}
-            {tab === "faqs" && ` (${faqs?.length ?? 0})`}
-            {tab === "reviews" && ` (${reviews?.length ?? 0})`}
-          </button>
-        ))}
-      </div>
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabType)}>
+        <TabsList
+          variant="line"
+          className="h-auto w-full flex-nowrap justify-start gap-0 overflow-x-auto rounded-none border-b border-zinc-200 bg-transparent p-0 dark:border-zinc-800"
+        >
+          {(["overview", "variants", "inventory", "activity", "faqs", "reviews", "settings"] as TabType[]).map((tab) => (
+            <TabsTrigger
+              key={tab}
+              value={tab}
+              className="h-auto flex-none rounded-none border-x-0 border-t-0 border-b-2 border-transparent px-4 py-2.5 text-xs font-bold capitalize whitespace-nowrap text-zinc-500 shadow-none transition-all hover:text-zinc-700 data-active:border-amber-500 data-active:bg-transparent data-active:font-extrabold data-active:text-amber-600 data-active:shadow-none dark:hover:text-zinc-300 dark:data-active:text-amber-400"
+            >
+              {tab}
+              {tab === "variants" && ` (${product.variants?.length ?? 0})`}
+              {tab === "faqs" && ` (${faqs?.length ?? 0})`}
+              {tab === "reviews" && ` (${reviews?.length ?? 0})`}
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
       {/* Overview tab */}
-      {activeTab === "overview" && (
+      <TabsContent value="overview" className="mt-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-200">
           <div className="lg:col-span-2 space-y-6">
             <Card>
@@ -831,63 +848,84 @@ export default function ProductDetailPage({ params }: PageProps) {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <Label htmlFor="edit-cat" className="text-xs font-bold">Category</Label>
-                        <select
-                          id="edit-cat"
+                        <Select
                           value={editCategoryId}
-                          onChange={(e) => setEditCategoryId(e.target.value)}
-                          className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
+                          onValueChange={(val) => setEditCategoryId(val ?? "")}
+                          items={categoriesData?.nodes.map((c: any) => ({ value: c.id, label: c.name })) ?? []}
                         >
-                          {categoriesData?.nodes.map((c: any) => (
-                            <option key={c.id} value={c.id}>{c.name}</option>
-                          ))}
-                        </select>
+                          <SelectTrigger id="edit-cat" className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categoriesData?.nodes.map((c: any) => (
+                              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="space-y-1.5">
                         <Label htmlFor="edit-brand" className="text-xs font-bold">Brand</Label>
-                        <select
-                          id="edit-brand"
+                        <Select
                           value={editBrandId}
-                          onChange={(e) => setEditBrandId(e.target.value)}
-                          className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
+                          onValueChange={(val) => setEditBrandId(val ?? "")}
+                          items={brandsData?.brands.map((b: any) => ({ value: b.id, label: b.name })) ?? []}
                         >
-                          {brandsData?.brands.map((b: any) => (
-                            <option key={b.id} value={b.id}>{b.name}</option>
-                          ))}
-                        </select>
+                          <SelectTrigger id="edit-brand" className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {brandsData?.brands.map((b: any) => (
+                              <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <Label htmlFor="edit-tax" className="text-xs font-bold">Tax Rate</Label>
-                        <select
-                          id="edit-tax"
+                        <Select
                           value={editTaxId}
-                          onChange={(e) => setEditTaxId(e.target.value)}
-                          className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
+                          onValueChange={(val) => setEditTaxId(val ?? "")}
+                          items={taxRatesData?.nodes.map((t: any) => ({ value: t.id, label: `${t.name} (${t.igst}%)` })) ?? []}
                         >
-                          {taxRatesData?.nodes.map((t: any) => (
-                            <option key={t.id} value={t.id}>{t.name} ({t.igst}%)</option>
-                          ))}
-                        </select>
+                          <SelectTrigger id="edit-tax" className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {taxRatesData?.nodes.map((t: any) => (
+                              <SelectItem key={t.id} value={t.id}>{t.name} ({t.igst}%)</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="space-y-1.5">
                         <Label htmlFor="edit-subcat" className="text-xs font-bold">Sub Category</Label>
-                        <select
-                          id="edit-subcat"
-                          value={editSubCategoryId}
-                          onChange={(e) => setEditSubCategoryId(e.target.value)}
-                          className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
+                        <Select
+                          value={editSubCategoryId || "none"}
+                          onValueChange={(val) => setEditSubCategoryId(!val || val === "none" ? "" : val)}
+                          items={[
+                            { value: "none", label: "None" },
+                            ...(categoriesData?.nodes
+                              .filter((c: any) => c.parentId === editCategoryId && editCategoryId !== "")
+                              .map((c: any) => ({ value: c.id, label: c.name })) ?? []),
+                          ]}
                         >
-                          <option value="">None</option>
-                          {categoriesData?.nodes
-                            .filter((c: any) => c.parentId === editCategoryId && editCategoryId !== "")
-                            .map((c: any) => (
-                              <option key={c.id} value={c.id}>{c.name}</option>
-                            ))}
-                        </select>
+                          <SelectTrigger id="edit-subcat" className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            {categoriesData?.nodes
+                              .filter((c: any) => c.parentId === editCategoryId && editCategoryId !== "")
+                              .map((c: any) => (
+                                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
@@ -1034,10 +1072,10 @@ export default function ProductDetailPage({ params }: PageProps) {
             </Card>
           </div>
         </div>
-      )}
+      </TabsContent>
 
       {/* Variants tab */}
-      {activeTab === "variants" && (
+      <TabsContent value="variants" className="mt-6">
         <Card className="animate-in fade-in duration-200 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
           <CardHeader className="flex flex-row items-center justify-between border-b pb-4 flex-wrap gap-2">
             <div>
@@ -1055,22 +1093,22 @@ export default function ProductDetailPage({ params }: PageProps) {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full text-xs text-left divide-y divide-zinc-200 dark:divide-zinc-800">
-                  <thead className="bg-zinc-50 dark:bg-zinc-900 font-semibold text-muted-foreground uppercase text-[10px] tracking-wider">
-                    <tr>
-                      <th className="p-4">SKU / Size Label</th>
-                      <th className="p-4 text-right">Cost Price</th>
-                      <th className="p-4 text-right">MRP</th>
-                      <th className="p-4 text-right">Selling Price</th>
-                      <th className="p-4 text-center">Default Status</th>
-                      <th className="p-4 text-center">Display Order</th>
-                      <th className="p-4 text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                <Table className="text-xs">
+                  <TableHeader>
+                    <TableRow className="bg-zinc-50 dark:bg-zinc-900 font-semibold text-muted-foreground uppercase text-[10px] tracking-wider">
+                      <TableHead className="p-4">SKU / Size Label</TableHead>
+                      <TableHead className="p-4 text-right">Cost Price</TableHead>
+                      <TableHead className="p-4 text-right">MRP</TableHead>
+                      <TableHead className="p-4 text-right">Selling Price</TableHead>
+                      <TableHead className="p-4 text-center">Default Status</TableHead>
+                      <TableHead className="p-4 text-center">Display Order</TableHead>
+                      <TableHead className="p-4 text-center">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {product.variants.map((v) => (
-                      <tr key={v.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/30">
-                        <td className="p-4 flex items-center gap-3">
+                      <TableRow key={v.id}>
+                        <TableCell className="p-4 flex items-center gap-3">
                           {/* Fallback image check */}
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
@@ -1082,19 +1120,19 @@ export default function ProductDetailPage({ params }: PageProps) {
                             <span className="font-bold text-foreground block">{getVariantLabel(v.unit, v.unitValue)}</span>
                             <code className="text-[10px] text-muted-foreground font-mono">{v.sku}</code>
                           </div>
-                        </td>
-                        <td className="p-4 text-right font-mono text-zinc-500">₹{(v.costPrice / 100).toFixed(2)}</td>
-                        <td className="p-4 text-right font-mono text-zinc-500">₹{(v.mrp / 100).toFixed(2)}</td>
-                        <td className="p-4 text-right font-mono font-semibold text-emerald-600">₹{(v.sellingPrice / 100).toFixed(2)}</td>
-                        <td className="p-4 text-center">
+                        </TableCell>
+                        <TableCell className="p-4 text-right font-mono text-zinc-500">₹{(v.costPrice / 100).toFixed(2)}</TableCell>
+                        <TableCell className="p-4 text-right font-mono text-zinc-500">₹{(v.mrp / 100).toFixed(2)}</TableCell>
+                        <TableCell className="p-4 text-right font-mono font-semibold text-emerald-600">₹{(v.sellingPrice / 100).toFixed(2)}</TableCell>
+                        <TableCell className="p-4 text-center">
                           {v.isDefault ? (
                             <Badge variant="default" className="text-[9px] uppercase">Default</Badge>
                           ) : (
                             <span className="text-[10px] text-muted-foreground">Secondary</span>
                           )}
-                        </td>
-                        <td className="p-4 text-center font-mono text-muted-foreground">{v.sortOrder}</td>
-                        <td className="p-4 text-center">
+                        </TableCell>
+                        <TableCell className="p-4 text-center font-mono text-muted-foreground">{v.sortOrder}</TableCell>
+                        <TableCell className="p-4 text-center">
                           <DropdownMenu>
                             <DropdownMenuTrigger
                               render={
@@ -1119,19 +1157,19 @@ export default function ProductDetailPage({ params }: PageProps) {
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             )}
           </CardContent>
         </Card>
-      )}
+      </TabsContent>
 
       {/* Inventory tab */}
-      {activeTab === "inventory" && (
+      <TabsContent value="inventory" className="mt-6">
         <Card className="animate-in fade-in duration-200 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
           <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
             <div>
@@ -1146,19 +1184,19 @@ export default function ProductDetailPage({ params }: PageProps) {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full text-xs text-left divide-y divide-zinc-200 dark:divide-zinc-800">
-                  <thead className="bg-zinc-50 dark:bg-zinc-900 font-semibold text-muted-foreground uppercase text-[10px] tracking-wider">
-                    <tr>
-                      <th className="p-4">Variant Details</th>
-                      <th className="p-4 text-center">App Stock</th>
-                      <th className="p-4 text-center">Local Stock</th>
-                      <th className="p-4 text-center">Reserved Stock</th>
-                      <th className="p-4 text-center font-bold">Available Stock (Calculated)</th>
-                      <th className="p-4 text-center">Thresholds (Min / Reorder)</th>
-                      <th className="p-4 text-center">Inventory Adjustments</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800 font-medium">
+                <Table className="text-xs">
+                  <TableHeader>
+                    <TableRow className="bg-zinc-50 dark:bg-zinc-900 font-semibold text-muted-foreground uppercase text-[10px] tracking-wider">
+                      <TableHead className="p-4">Variant Details</TableHead>
+                      <TableHead className="p-4 text-center">App Stock</TableHead>
+                      <TableHead className="p-4 text-center">Local Stock</TableHead>
+                      <TableHead className="p-4 text-center">Reserved Stock</TableHead>
+                      <TableHead className="p-4 text-center font-bold">Available Stock (Calculated)</TableHead>
+                      <TableHead className="p-4 text-center">Thresholds (Min / Reorder)</TableHead>
+                      <TableHead className="p-4 text-center">Inventory Adjustments</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="font-medium">
                     {product.variants.map((v) => {
                       const avStock = v.inventory?.availableStock ?? 0
                       const minStock = v.inventory?.minStock ?? 0
@@ -1166,15 +1204,15 @@ export default function ProductDetailPage({ params }: PageProps) {
                       const isLowStock = avStock <= minStock
 
                       return (
-                        <tr key={v.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/30">
-                          <td className="p-4">
+                        <TableRow key={v.id}>
+                          <TableCell className="p-4">
                             <span className="font-bold text-foreground block">{getVariantLabel(v.unit, v.unitValue)}</span>
                             <code className="text-[10px] font-mono text-muted-foreground">{v.sku}</code>
-                          </td>
-                          <td className="p-4 text-center font-mono">{v.inventory?.appStock ?? 0}</td>
-                          <td className="p-4 text-center font-mono">{v.inventory?.localStock ?? 0}</td>
-                          <td className="p-4 text-center font-mono text-zinc-500">{v.inventory?.reservedStock ?? 0}</td>
-                          <td className="p-4 text-center">
+                          </TableCell>
+                          <TableCell className="p-4 text-center font-mono">{v.inventory?.appStock ?? 0}</TableCell>
+                          <TableCell className="p-4 text-center font-mono">{v.inventory?.localStock ?? 0}</TableCell>
+                          <TableCell className="p-4 text-center font-mono text-zinc-500">{v.inventory?.reservedStock ?? 0}</TableCell>
+                          <TableCell className="p-4 text-center">
                             <div className="flex items-center justify-center gap-1.5">
                               <Badge variant={isLowStock ? "destructive" : "secondary"} className="font-mono font-bold">
                                 {avStock} Units
@@ -1183,11 +1221,11 @@ export default function ProductDetailPage({ params }: PageProps) {
                                 <span className="inline-flex text-[9px] uppercase font-bold text-rose-500">Low Stock</span>
                               )}
                             </div>
-                          </td>
-                          <td className="p-4 text-center text-zinc-500 font-mono">
+                          </TableCell>
+                          <TableCell className="p-4 text-center text-zinc-500 font-mono">
                             {minStock} Min / {reorder} Reorder
-                          </td>
-                          <td className="p-4 text-center">
+                          </TableCell>
+                          <TableCell className="p-4 text-center">
                             <Button
                               size="sm"
                               className="text-[10px] h-7 px-2.5 cursor-pointer bg-amber-500 text-white"
@@ -1195,20 +1233,20 @@ export default function ProductDetailPage({ params }: PageProps) {
                             >
                               Manage Stock
                             </Button>
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       )
                     })}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             )}
           </CardContent>
         </Card>
-      )}
+      </TabsContent>
 
       {/* Activity Stock history tab */}
-      {activeTab === "activity" && (
+      <TabsContent value="activity" className="mt-6">
         <Card className="animate-in fade-in duration-200 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
           <CardHeader className="flex flex-row items-center justify-between border-b pb-4 flex-wrap gap-2">
             <div>
@@ -1218,18 +1256,22 @@ export default function ProductDetailPage({ params }: PageProps) {
             {product.variants && product.variants.length > 0 && (
               <div className="flex items-center gap-2">
                 <Label htmlFor="hist-var" className="text-xs font-bold shrink-0">Variant SKU:</Label>
-                <select
-                  id="hist-var"
+                <Select
                   value={selectedVariantIdForHistory}
-                  onChange={(e) => setSelectedVariantIdForHistory(e.target.value)}
-                  className="h-9 px-3 py-1.5 text-xs font-semibold rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 cursor-pointer"
+                  onValueChange={(val) => setSelectedVariantIdForHistory(val ?? "")}
+                  items={product.variants.map((v) => ({ value: v.id, label: `${getVariantLabel(v.unit, v.unitValue)} (${v.sku})` }))}
                 >
-                  {product.variants.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {getVariantLabel(v.unit, v.unitValue)} ({v.sku})
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger id="hist-var" className="h-9 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {product.variants.map((v) => (
+                      <SelectItem key={v.id} value={v.id}>
+                        {getVariantLabel(v.unit, v.unitValue)} ({v.sku})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
           </CardHeader>
@@ -1242,49 +1284,49 @@ export default function ProductDetailPage({ params }: PageProps) {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full text-xs text-left divide-y divide-zinc-200 dark:divide-zinc-800">
-                  <thead className="bg-zinc-50 dark:bg-zinc-900 font-semibold text-muted-foreground uppercase text-[10px] tracking-wider">
-                    <tr>
-                      <th className="p-4">Date Time</th>
-                      <th className="p-4">Action Type</th>
-                      <th className="p-4 text-center">Change Qty</th>
-                      <th className="p-4 text-center">Ledger Balance (Prev &rarr; New)</th>
-                      <th className="p-4">Remarks / Reason</th>
-                      <th className="p-4">Actor</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800 font-mono">
+                <Table className="text-xs">
+                  <TableHeader>
+                    <TableRow className="bg-zinc-50 dark:bg-zinc-900 font-semibold text-muted-foreground uppercase text-[10px] tracking-wider">
+                      <TableHead className="p-4">Date Time</TableHead>
+                      <TableHead className="p-4">Action Type</TableHead>
+                      <TableHead className="p-4 text-center">Change Qty</TableHead>
+                      <TableHead className="p-4 text-center">Ledger Balance (Prev &rarr; New)</TableHead>
+                      <TableHead className="p-4">Remarks / Reason</TableHead>
+                      <TableHead className="p-4">Actor</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="font-mono">
                     {stockHistory.map((tx) => {
                       const isAddition = tx.qtyChanged > 0
                       return (
-                        <tr key={tx.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/30">
-                          <td className="p-4 text-zinc-500 font-sans">{new Date(tx.createdAt).toLocaleString()}</td>
-                          <td className="p-4">
+                        <TableRow key={tx.id}>
+                          <TableCell className="p-4 text-zinc-500 font-sans">{new Date(tx.createdAt).toLocaleString()}</TableCell>
+                          <TableCell className="p-4">
                             <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wide">
                               {tx.type}
                             </Badge>
-                          </td>
-                          <td className={`p-4 text-center font-bold ${isAddition ? "text-emerald-600" : "text-rose-500"}`}>
+                          </TableCell>
+                          <TableCell className={`p-4 text-center font-bold ${isAddition ? "text-emerald-600" : "text-rose-500"}`}>
                             {isAddition ? "+" : ""}{tx.qtyChanged} Units
-                          </td>
-                          <td className="p-4 text-center text-zinc-600 dark:text-zinc-400">
+                          </TableCell>
+                          <TableCell className="p-4 text-center text-zinc-600 dark:text-zinc-400">
                             {tx.previousStock} &rarr; {tx.newStock}
-                          </td>
-                          <td className="p-4 text-zinc-600 dark:text-zinc-400 font-sans italic">{tx.reason || tx.reference || "Manual Adjustment"}</td>
-                          <td className="p-4 text-zinc-500 font-sans">{tx.createdBy}</td>
-                        </tr>
+                          </TableCell>
+                          <TableCell className="p-4 text-zinc-600 dark:text-zinc-400 font-sans italic">{tx.reason || tx.reference || "Manual Adjustment"}</TableCell>
+                          <TableCell className="p-4 text-zinc-500 font-sans">{tx.createdBy}</TableCell>
+                        </TableRow>
                       )
                     })}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             )}
           </CardContent>
         </Card>
-      )}
+      </TabsContent>
 
       {/* FAQs tab */}
-      {activeTab === "faqs" && (
+      <TabsContent value="faqs" className="mt-6">
         <Card className="animate-in fade-in duration-200 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
           <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
             <div>
@@ -1330,10 +1372,10 @@ export default function ProductDetailPage({ params }: PageProps) {
             )}
           </CardContent>
         </Card>
-      )}
+      </TabsContent>
 
       {/* Reviews tab */}
-      {activeTab === "reviews" && (
+      <TabsContent value="reviews" className="mt-6">
         <Card className="animate-in fade-in duration-200 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
           <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
             <div>
@@ -1415,10 +1457,10 @@ export default function ProductDetailPage({ params }: PageProps) {
             )}
           </CardContent>
         </Card>
-      )}
+      </TabsContent>
 
       {/* Settings tab */}
-      {activeTab === "settings" && (
+      <TabsContent value="settings" className="mt-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-200">
           {/* Settings Left side: Status, SEO, Tags */}
           <div className="md:col-span-2 space-y-6">
@@ -1564,7 +1606,8 @@ export default function ProductDetailPage({ params }: PageProps) {
             </Card>
           </div>
         </div>
-      )}
+      </TabsContent>
+      </Tabs>
 
       {/* Reusable Dialog: ReasonInputDialog for Product Archival */}
       <ReasonInputDialog
@@ -1608,18 +1651,28 @@ export default function ProductDetailPage({ params }: PageProps) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="var-unit" className="text-xs font-bold">Unit Type *</Label>
-                <select
-                  id="var-unit"
+                <Select
                   value={variantUnit}
-                  onChange={(e) => handleModalUnitChange(e.target.value, variantUnitValue)}
-                  className="w-full h-10 px-3 py-1.5 text-sm rounded-lg bg-background border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
+                  onValueChange={(val) => handleModalUnitChange(val ?? "", variantUnitValue)}
+                  items={[
+                    { value: "gm", label: "Grams (GM)" },
+                    { value: "kg", label: "Kilograms (KG)" },
+                    { value: "litre", label: "Litres (LITRE)" },
+                    { value: "ml", label: "Millilitres (ML)" },
+                    { value: "pcs", label: "Pieces (PCS)" },
+                  ]}
                 >
-                  <option value="gm">Grams (GM)</option>
-                  <option value="kg">Kilograms (KG)</option>
-                  <option value="litre">Litres (LITRE)</option>
-                  <option value="ml">Millilitres (ML)</option>
-                  <option value="pcs">Pieces (PCS)</option>
-                </select>
+                  <SelectTrigger id="var-unit" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="gm">Grams (GM)</SelectItem>
+                    <SelectItem value="kg">Kilograms (KG)</SelectItem>
+                    <SelectItem value="litre">Litres (LITRE)</SelectItem>
+                    <SelectItem value="ml">Millilitres (ML)</SelectItem>
+                    <SelectItem value="pcs">Pieces (PCS)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-1.5">
@@ -1714,12 +1767,10 @@ export default function ProductDetailPage({ params }: PageProps) {
                 />
               </div>
               <div className="flex items-center gap-2 pt-6">
-                <input
+                <Checkbox
                   id="var-default"
-                  type="checkbox"
                   checked={variantIsDefault}
-                  onChange={(e) => setVariantIsDefault(e.target.checked)}
-                  className="rounded text-amber-500 focus:ring-amber-500 cursor-pointer"
+                  onCheckedChange={(checked) => setVariantIsDefault(checked === true)}
                 />
                 <Label htmlFor="var-default" className="text-xs font-bold cursor-pointer">Set as Default variant SKU</Label>
               </div>
@@ -1778,15 +1829,22 @@ export default function ProductDetailPage({ params }: PageProps) {
               </div>
               <div className="space-y-1">
                 <Label htmlFor="faqStatus" className="text-xs font-bold">Status</Label>
-                <select
-                  id="faqStatus"
+                <Select
                   value={faqStatus}
-                  onChange={(e) => setFaqStatus(e.target.value as any)}
-                  className="h-10 w-full px-3 py-1 text-sm rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
+                  onValueChange={(val) => setFaqStatus(val as any)}
+                  items={[
+                    { value: "active", label: "Active" },
+                    { value: "inactive", label: "Inactive" },
+                  ]}
                 >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
+                  <SelectTrigger id="faqStatus" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -1819,32 +1877,50 @@ export default function ProductDetailPage({ params }: PageProps) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label htmlFor="rating" className="text-xs font-bold">Rating Stars (1-5)</Label>
-                <select
-                  id="rating"
+                <Select
                   value={reviewRating}
-                  onChange={(e) => setReviewRating(e.target.value)}
+                  onValueChange={(val) => setReviewRating(val ?? reviewRating)}
                   disabled={!!editingReview}
-                  className="h-10 w-full px-3 py-1 text-sm rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
+                  items={[
+                    { value: "5", label: "5 Stars" },
+                    { value: "4", label: "4 Stars" },
+                    { value: "3", label: "3 Stars" },
+                    { value: "2", label: "2 Stars" },
+                    { value: "1", label: "1 Star" },
+                  ]}
                 >
-                  <option value="5">5 Stars</option>
-                  <option value="4">4 Stars</option>
-                  <option value="3">3 Stars</option>
-                  <option value="2">2 Stars</option>
-                  <option value="1">1 Star</option>
-                </select>
+                  <SelectTrigger id="rating" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5 Stars</SelectItem>
+                    <SelectItem value="4">4 Stars</SelectItem>
+                    <SelectItem value="3">3 Stars</SelectItem>
+                    <SelectItem value="2">2 Stars</SelectItem>
+                    <SelectItem value="1">1 Star</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1">
                 <Label htmlFor="revStatus" className="text-xs font-bold">Approval Status</Label>
-                <select
-                  id="revStatus"
+                <Select
                   value={reviewStatus}
-                  onChange={(e) => setReviewStatus(e.target.value as any)}
-                  className="h-10 w-full px-3 py-1 text-sm rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
+                  onValueChange={(val) => setReviewStatus(val as any)}
+                  items={[
+                    { value: "approved", label: "Approved" },
+                    { value: "pending", label: "Pending" },
+                    { value: "rejected", label: "Rejected" },
+                  ]}
                 >
-                  <option value="approved">Approved</option>
-                  <option value="pending">Pending</option>
-                  <option value="rejected">Rejected</option>
-                </select>
+                  <SelectTrigger id="revStatus" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="space-y-1">
@@ -1860,12 +1936,10 @@ export default function ProductDetailPage({ params }: PageProps) {
             </div>
 
             <div className="flex items-center gap-2 pt-2">
-              <input
+              <Checkbox
                 id="is-verified"
-                type="checkbox"
                 checked={reviewVerified}
-                onChange={(e) => setReviewVerified(e.target.checked)}
-                className="rounded text-amber-500 focus:ring-amber-500 cursor-pointer"
+                onCheckedChange={(checked) => setReviewVerified(checked === true)}
               />
               <Label htmlFor="is-verified" className="text-xs font-bold cursor-pointer">Verified Purchase Indicator</Label>
             </div>

@@ -19,6 +19,15 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Field,
   FieldError,
@@ -226,46 +235,32 @@ export function CategoryForm({ nodeId }: CategoryFormProps) {
       </div>
 
       <Card className="p-0">
-        {/* Custom Tab list */}
-        <div className="flex border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/30 px-6 pt-2 gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveTab("basic")}
-            className={`flex items-center gap-1.5 px-4 py-3 text-xs font-semibold border-b-2 -mb-px transition-all ${activeTab === "basic"
-              ? "border-primary text-primary"
-              : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
-              }`}
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as typeof activeTab)}
+          className="gap-0"
+        >
+          <TabsList
+            variant="line"
+            className="w-full justify-start overflow-x-auto rounded-none border-b border-zinc-200 bg-zinc-50/50 px-6 pt-2 dark:border-zinc-800 dark:bg-zinc-900/30"
           >
-            <InfoIcon className="size-4" />
-            General info
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("assets")}
-            className={`flex items-center gap-1.5 px-4 py-3 text-xs font-semibold border-b-2 -mb-px transition-all ${activeTab === "assets"
-              ? "border-primary text-primary"
-              : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
-              }`}
-          >
-            <ImageIcon className="size-4" />
-            Media & Keywords
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("seo")}
-            className={`flex items-center gap-1.5 px-4 py-3 text-xs font-semibold border-b-2 -mb-px transition-all ${activeTab === "seo"
-              ? "border-primary text-primary"
-              : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
-              }`}
-          >
-            <GlobeIcon className="size-4" />
-            SEO & Rules
-          </button>
-        </div>
+            <TabsTrigger value="basic" className="gap-1.5 px-4 py-3 text-xs font-semibold">
+              <InfoIcon className="size-4" />
+              General info
+            </TabsTrigger>
+            <TabsTrigger value="assets" className="gap-1.5 px-4 py-3 text-xs font-semibold">
+              <ImageIcon className="size-4" />
+              Media & Keywords
+            </TabsTrigger>
+            <TabsTrigger value="seo" className="gap-1.5 px-4 py-3 text-xs font-semibold">
+              <GlobeIcon className="size-4" />
+              SEO & Rules
+            </TabsTrigger>
+          </TabsList>
 
-        <CardContent className="px-6 pt-4 pb-6">
-          <form onSubmit={onSubmit} className="space-y-6">
-            {activeTab === "basic" && (
+          <CardContent className="px-6 pt-4 pb-6">
+            <form onSubmit={onSubmit} className="space-y-6">
+              <TabsContent value="basic">
               <FieldGroup className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <Controller
                   name="name"
@@ -309,16 +304,25 @@ export function CategoryForm({ nodeId }: CategoryFormProps) {
                   render={({ field }) => (
                     <Field>
                       <FieldLabel>{t("fieldType")}</FieldLabel>
-                      <select
-                        {...field}
-                        className="flex w-full items-center justify-between rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary dark:border-zinc-800 dark:bg-zinc-950"
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        items={Object.values(CatalogNodeType).map((type) => ({
+                          value: type,
+                          label: type,
+                        }))}
                       >
-                        {Object.values(CatalogNodeType).map((type) => (
-                          <option key={type} value={type}>
-                            {type}
-                          </option>
-                        ))}
-                      </select>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.values(CatalogNodeType).map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </Field>
                   )}
                 />
@@ -329,18 +333,31 @@ export function CategoryForm({ nodeId }: CategoryFormProps) {
                   render={({ field }) => (
                     <Field>
                       <FieldLabel>{t("fieldParent")}</FieldLabel>
-                      <select
-                        value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value || null)}
-                        className="flex w-full items-center justify-between rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary dark:border-zinc-800 dark:bg-zinc-950"
+                      <Select
+                        value={field.value || "__root__"}
+                        onValueChange={(value) =>
+                          field.onChange(value === "__root__" ? null : value)
+                        }
+                        items={[
+                          { value: "__root__", label: "[ None - Root Node ]" },
+                          ...parentCandidates.map((c) => ({
+                            value: c.id,
+                            label: `${"—".repeat(c.level)} ${c.name} (${c.code})`,
+                          })),
+                        ]}
                       >
-                        <option value="">[ None - Root Node ]</option>
-                        {parentCandidates.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {"—".repeat(c.level)} {c.name} ({c.code})
-                          </option>
-                        ))}
-                      </select>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__root__">[ None - Root Node ]</SelectItem>
+                          {parentCandidates.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {"—".repeat(c.level)} {c.name} ({c.code})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </Field>
                   )}
                 />
@@ -367,16 +384,25 @@ export function CategoryForm({ nodeId }: CategoryFormProps) {
                   render={({ field }) => (
                     <Field>
                       <FieldLabel>{t("fieldStatus")}</FieldLabel>
-                      <select
-                        {...field}
-                        className="flex h-9 w-full items-center justify-between rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary dark:border-zinc-800 dark:bg-zinc-950"
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        items={Object.values(CatalogNodeStatus).map((status) => ({
+                          value: status,
+                          label: status,
+                        }))}
                       >
-                        {Object.values(CatalogNodeStatus).map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </select>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.values(CatalogNodeStatus).map((status) => (
+                            <SelectItem key={status} value={status}>
+                              {status}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </Field>
                   )}
                 />
@@ -435,9 +461,9 @@ export function CategoryForm({ nodeId }: CategoryFormProps) {
                   />
                 </div>
               </FieldGroup>
-            )}
+              </TabsContent>
 
-            {activeTab === "assets" && (
+              <TabsContent value="assets">
               <FieldGroup className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <Controller
                   name="thumbnail"
@@ -513,9 +539,9 @@ export function CategoryForm({ nodeId }: CategoryFormProps) {
                   />
                 </div>
               </FieldGroup>
-            )}
+              </TabsContent>
 
-            {activeTab === "seo" && (
+              <TabsContent value="seo">
               <div className="space-y-6">
                 <FieldSet>
                   <legend className="text-xs font-semibold uppercase text-zinc-400 tracking-wider mb-3">
@@ -574,17 +600,7 @@ export function CategoryForm({ nodeId }: CategoryFormProps) {
                       name="visibilityRules.enabled"
                       control={control}
                       render={({ field }) => (
-                        <button
-                          type="button"
-                          onClick={() => field.onChange(!field.value)}
-                          className={`relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${field.value ? "bg-primary" : "bg-zinc-200 dark:bg-zinc-800"
-                            }`}
-                        >
-                          <span
-                            className={`pointer-events-none inline-block size-4.5 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${field.value ? "translate-x-4.5" : "translate-x-0"
-                              }`}
-                          />
-                        </button>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
                       )}
                     />
                   </div>
@@ -601,14 +617,7 @@ export function CategoryForm({ nodeId }: CategoryFormProps) {
                         name="isFeatured"
                         control={control}
                         render={({ field }) => (
-                          <button
-                            type="button"
-                            onClick={() => field.onChange(!field.value)}
-                            className={`relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${field.value ? "bg-primary" : "bg-zinc-200 dark:bg-zinc-800"
-                              }`}
-                          >
-                            <span className={`inline-block size-4.5 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${field.value ? "translate-x-4.5" : "translate-x-0"}`} />
-                          </button>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
                         )}
                       />
                     </div>
@@ -619,14 +628,7 @@ export function CategoryForm({ nodeId }: CategoryFormProps) {
                         name="showInMenu"
                         control={control}
                         render={({ field }) => (
-                          <button
-                            type="button"
-                            onClick={() => field.onChange(!field.value)}
-                            className={`relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${field.value ? "bg-primary" : "bg-zinc-200 dark:bg-zinc-800"
-                              }`}
-                          >
-                            <span className={`inline-block size-4.5 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${field.value ? "translate-x-4.5" : "translate-x-0"}`} />
-                          </button>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
                         )}
                       />
                     </div>
@@ -637,33 +639,27 @@ export function CategoryForm({ nodeId }: CategoryFormProps) {
                         name="showOnHome"
                         control={control}
                         render={({ field }) => (
-                          <button
-                            type="button"
-                            onClick={() => field.onChange(!field.value)}
-                            className={`relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${field.value ? "bg-primary" : "bg-zinc-200 dark:bg-zinc-800"
-                              }`}
-                          >
-                            <span className={`inline-block size-4.5 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${field.value ? "translate-x-4.5" : "translate-x-0"}`} />
-                          </button>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
                         )}
                       />
                     </div>
                   </div>
                 </FieldSet>
               </div>
-            )}
+              </TabsContent>
 
-            <div className="flex justify-end gap-3 border-t pt-5 dark:border-zinc-800">
-              <Button type="button" variant="outline" onClick={() => router.push("/categories")} disabled={isPending}>
-                {t("cancel")}
-              </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <CircleNotchIcon className="size-4 animate-spin mr-2" />}
-                {t("saveChanges")}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
+              <div className="flex justify-end gap-3 border-t pt-5 dark:border-zinc-800">
+                <Button type="button" variant="outline" onClick={() => router.push("/categories")} disabled={isPending}>
+                  {t("cancel")}
+                </Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending && <CircleNotchIcon className="size-4 animate-spin mr-2" />}
+                  {t("saveChanges")}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Tabs>
       </Card>
     </div>
   )

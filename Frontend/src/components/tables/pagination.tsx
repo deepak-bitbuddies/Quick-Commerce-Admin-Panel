@@ -7,6 +7,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface PaginationProps {
   page: number
@@ -44,17 +51,22 @@ export function Pagination({
           <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
             Per Page:
           </label>
-          <select
-            value={pageSize}
-            onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="h-8 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2 py-1 text-xs outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer font-medium"
+          <Select
+            value={String(pageSize)}
+            onValueChange={(value) => onPageSizeChange(Number(value))}
+            items={pageSizeOptions.map((opt) => ({ value: String(opt), label: String(opt) }))}
           >
-            {pageSizeOptions.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="text-xs font-medium">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {pageSizeOptions.map((opt) => (
+                <SelectItem key={opt} value={String(opt)}>
+                  {opt}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* UIPagination Controls */}

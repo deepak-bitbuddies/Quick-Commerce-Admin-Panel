@@ -29,17 +29,34 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
   useVariantDetailQuery,
   useAdjustStockMutation,
   useTransferStockMutation,
   useStockHistoryQuery,
 } from "@/modules/products/hooks/use-products"
 import type { ApiErrorPayload } from "@/lib/axios"
+import { StockTransferDirection } from "@/modules/products"
 
 // Zod schemas for the forms
 const transferStockSchema = z.object({
   qty: z.coerce.number().int().positive("Transfer quantity must be positive"),
-  direction: z.enum(["APP_TO_LOCAL", "LOCAL_TO_APP"]),
+  direction: z.nativeEnum(StockTransferDirection),
   reason: z.string().max(200).optional(),
 })
 
@@ -86,7 +103,7 @@ export default function VariantStockManagePage() {
     resolver: zodResolver(transferStockSchema) as any,
     defaultValues: {
       qty: 1,
-      direction: "APP_TO_LOCAL",
+      direction: StockTransferDirection.APP_TO_LOCAL,
       reason: "",
     }
   })
@@ -117,10 +134,7 @@ export default function VariantStockManagePage() {
 
   if (!detailData) {
     return (
-      <div className="space-y-4">
-        <Button variant="outline" size="sm" onClick={() => router.push("/products/inventory")} className="cursor-pointer">
-          <ArrowLeftIcon className="size-4 mr-1.5" /> Back to Inventory
-        </Button>
+      <div>
         <div className="p-8 text-center border rounded-lg bg-zinc-50 dark:bg-zinc-900/50">
           <span className="text-sm font-semibold text-red-500">Variant SKU details not found or deleted.</span>
         </div>
@@ -192,12 +206,6 @@ export default function VariantStockManagePage() {
       {/* Page Header */}
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between border-b pb-4">
         <div className="space-y-0.5">
-          <button
-            onClick={() => router.push("/products/inventory")}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition cursor-pointer mb-2"
-          >
-            <ArrowLeftIcon className="size-3.5" /> Back to Inventory Control
-          </button>
           <h2 className="text-xl font-bold tracking-tight text-foreground">
             Manage SKU Stock Levels
           </h2>
@@ -274,32 +282,18 @@ export default function VariantStockManagePage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={onAdjustSubmit} className="space-y-4">
-              <div className="flex gap-2 p-1 bg-zinc-100 dark:bg-zinc-900 rounded-lg">
-                <button
-                  type="button"
-                  onClick={() => handleAdjustActionChange("add")}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-md transition-all cursor-pointer ${
-                    adjustAction === "add"
-                      ? "bg-white dark:bg-zinc-800 shadow text-emerald-600 dark:text-emerald-400"
-                      : "text-zinc-500 hover:text-zinc-700"
-                  }`}
-                >
-                  <PlusIcon className="size-4" />
-                  Add Stock
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleAdjustActionChange("deduct")}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-md transition-all cursor-pointer ${
-                    adjustAction === "deduct"
-                      ? "bg-white dark:bg-zinc-800 shadow text-rose-600 dark:text-rose-400"
-                      : "text-zinc-500 hover:text-zinc-700"
-                  }`}
-                >
-                  <MinusIcon className="size-4" />
-                  Remove Stock
-                </button>
-              </div>
+              <Tabs value={adjustAction} onValueChange={(value) => handleAdjustActionChange(value as "add" | "deduct")}>
+                <TabsList className="w-full">
+                  <TabsTrigger value="add" className="text-xs font-bold data-active:text-emerald-600 dark:data-active:text-emerald-400">
+                    <PlusIcon className="size-4" />
+                    Add Stock
+                  </TabsTrigger>
+                  <TabsTrigger value="deduct" className="text-xs font-bold data-active:text-rose-600 dark:data-active:text-rose-400">
+                    <MinusIcon className="size-4" />
+                    Remove Stock
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
 
               <FieldGroup className="space-y-3">
                 <Controller
@@ -320,13 +314,22 @@ export default function VariantStockManagePage() {
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>Target Stock Pool *</FieldLabel>
-                      <select
-                        {...field}
-                        className="h-10 w-full px-3 py-1 text-sm rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        items={[
+                          { value: "localStock", label: "Local Shelf Stock (localStock)" },
+                          { value: "appStock", label: "Mobile App Stock (appStock)" },
+                        ]}
                       >
-                        <option value="localStock">Local Shelf Stock (localStock)</option>
-                        <option value="appStock">Mobile App Stock (appStock)</option>
-                      </select>
+                        <SelectTrigger className="w-full cursor-pointer">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="localStock">Local Shelf Stock (localStock)</SelectItem>
+                          <SelectItem value="appStock">Mobile App Stock (appStock)</SelectItem>
+                        </SelectContent>
+                      </Select>
                       {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                     </Field>
                   )}
@@ -338,25 +341,44 @@ export default function VariantStockManagePage() {
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>Audit Activity Code *</FieldLabel>
-                      <select
-                        {...field}
-                        className="h-10 w-full px-3 py-1 text-sm rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        items={
+                          adjustAction === "add"
+                            ? [
+                                { value: "PURCHASE", label: "Supplier Purchase / Restock (PURCHASE)" },
+                                { value: "RETURN", label: "Customer Return (RETURN)" },
+                                { value: "ORDER_CANCELLATION", label: "Order Cancellation (ORDER_CANCELLATION)" },
+                                { value: "MANUAL_ADJUSTMENT", label: "Manual Override Adjust (MANUAL_ADJUSTMENT)" },
+                              ]
+                            : [
+                                { value: "DAMAGE", label: "Damaged / Broken Product (DAMAGE)" },
+                                { value: "EXPIRY", label: "Expired Product (EXPIRY)" },
+                                { value: "MANUAL_ADJUSTMENT", label: "Manual Stock Correction (MANUAL_ADJUSTMENT)" },
+                              ]
+                        }
                       >
-                        {adjustAction === "add" ? (
-                          <>
-                            <option value="PURCHASE">Supplier Purchase / Restock (PURCHASE)</option>
-                            <option value="RETURN">Customer Return (RETURN)</option>
-                            <option value="ORDER_CANCELLATION">Order Cancellation (ORDER_CANCELLATION)</option>
-                            <option value="MANUAL_ADJUSTMENT">Manual Override Adjust (MANUAL_ADJUSTMENT)</option>
-                          </>
-                        ) : (
-                          <>
-                            <option value="DAMAGE">Damaged / Broken Product (DAMAGE)</option>
-                            <option value="EXPIRY">Expired Product (EXPIRY)</option>
-                            <option value="MANUAL_ADJUSTMENT">Manual Stock Correction (MANUAL_ADJUSTMENT)</option>
-                          </>
-                        )}
-                      </select>
+                        <SelectTrigger className="w-full cursor-pointer">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {adjustAction === "add" ? (
+                            <>
+                              <SelectItem value="PURCHASE">Supplier Purchase / Restock (PURCHASE)</SelectItem>
+                              <SelectItem value="RETURN">Customer Return (RETURN)</SelectItem>
+                              <SelectItem value="ORDER_CANCELLATION">Order Cancellation (ORDER_CANCELLATION)</SelectItem>
+                              <SelectItem value="MANUAL_ADJUSTMENT">Manual Override Adjust (MANUAL_ADJUSTMENT)</SelectItem>
+                            </>
+                          ) : (
+                            <>
+                              <SelectItem value="DAMAGE">Damaged / Broken Product (DAMAGE)</SelectItem>
+                              <SelectItem value="EXPIRY">Expired Product (EXPIRY)</SelectItem>
+                              <SelectItem value="MANUAL_ADJUSTMENT">Manual Stock Correction (MANUAL_ADJUSTMENT)</SelectItem>
+                            </>
+                          )}
+                        </SelectContent>
+                      </Select>
                       {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                     </Field>
                   )}
@@ -413,13 +435,22 @@ export default function VariantStockManagePage() {
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>Transfer Direction *</FieldLabel>
-                      <select
-                        {...field}
-                        className="h-10 w-full px-3 py-1 text-sm rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-foreground cursor-pointer"
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        items={[
+                          { value: StockTransferDirection.APP_TO_LOCAL, label: "Move App Stock ➔ Local Store Stock" },
+                          { value: StockTransferDirection.LOCAL_TO_APP, label: "Move Local Store Stock ➔ App Stock" },
+                        ]}
                       >
-                        <option value="APP_TO_LOCAL">Move App Stock ➔ Local Store Stock</option>
-                        <option value="LOCAL_TO_APP">Move Local Store Stock ➔ App Stock</option>
-                      </select>
+                        <SelectTrigger className="w-full cursor-pointer">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={StockTransferDirection.APP_TO_LOCAL}>Move App Stock ➔ Local Store Stock</SelectItem>
+                          <SelectItem value={StockTransferDirection.LOCAL_TO_APP}>Move Local Store Stock ➔ App Stock</SelectItem>
+                        </SelectContent>
+                      </Select>
                       {fieldState.invalid && <FieldError errors={[{ message: fieldState.error?.message }]} />}
                     </Field>
                   )}
@@ -472,70 +503,68 @@ export default function VariantStockManagePage() {
               No transactions logged for this SKU yet.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
-                <thead>
-                  <tr className="text-muted-foreground font-semibold text-left">
-                    <th className="py-2 pr-4">Timestamp</th>
-                    <th className="py-2 pr-4">Ledger Activity</th>
-                    <th className="py-2 pr-4 text-center">Qty Changed</th>
-                    <th className="py-2 pr-4 text-center">Prev Stock</th>
-                    <th className="py-2 pr-4 text-center">New Stock</th>
-                    <th className="py-2 text-left">Metadata Details & Operator</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-150 dark:divide-zinc-800">
-                  {history.map((tx) => {
-                    let badgeVariant: "default" | "secondary" | "destructive" | "outline" = "secondary"
-                    let badgeClass = "capitalize py-0.5 text-[9px] font-bold tracking-wider"
+            <Table className="text-xs">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="py-2 pr-4">Timestamp</TableHead>
+                  <TableHead className="py-2 pr-4">Ledger Activity</TableHead>
+                  <TableHead className="py-2 pr-4 text-center">Qty Changed</TableHead>
+                  <TableHead className="py-2 pr-4 text-center">Prev Stock</TableHead>
+                  <TableHead className="py-2 pr-4 text-center">New Stock</TableHead>
+                  <TableHead className="py-2 text-left">Metadata Details & Operator</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {history.map((tx) => {
+                  let badgeVariant: "default" | "secondary" | "destructive" | "outline" = "secondary"
+                  let badgeClass = "capitalize py-0.5 text-[9px] font-bold tracking-wider"
 
-                    if (["RESTOCK", "PURCHASE", "INITIAL_STOCK"].includes(tx.type)) {
-                      badgeVariant = "default"
-                    } else if (tx.type === "APP_SALE") {
-                      badgeVariant = "outline"
-                      badgeClass += " bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900"
-                    } else if (tx.type === "LOCAL_SALE") {
-                      badgeVariant = "outline"
-                      badgeClass += " bg-amber-50 text-amber-700 border-amber-250 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900"
-                    } else if (["DAMAGE", "EXPIRY"].includes(tx.type)) {
-                      badgeVariant = "destructive"
-                    }
+                  if (["RESTOCK", "PURCHASE", "INITIAL_STOCK"].includes(tx.type)) {
+                    badgeVariant = "default"
+                  } else if (tx.type === "APP_SALE") {
+                    badgeVariant = "outline"
+                    badgeClass += " bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900"
+                  } else if (tx.type === "LOCAL_SALE") {
+                    badgeVariant = "outline"
+                    badgeClass += " bg-amber-50 text-amber-700 border-amber-250 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900"
+                  } else if (["DAMAGE", "EXPIRY"].includes(tx.type)) {
+                    badgeVariant = "destructive"
+                  }
 
-                    return (
-                      <tr key={tx.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/30">
-                        <td className="py-3 pr-4 text-zinc-500 font-mono text-[10px] whitespace-nowrap">
-                          {new Date(tx.createdAt).toLocaleString()}
-                        </td>
-                        <td className="py-3 pr-4 font-semibold">
-                          <Badge variant={badgeVariant} className={badgeClass}>
-                            {tx.type.replace("_", " ")}
-                          </Badge>
-                        </td>
-                        <td className={`py-3 pr-4 text-center font-mono font-bold ${tx.qtyChanged > 0 ? "text-emerald-600" : "text-red-500"}`}>
-                          {tx.qtyChanged > 0 ? `+${tx.qtyChanged}` : tx.qtyChanged}
-                        </td>
-                        <td className="py-3 pr-4 text-center font-mono text-muted-foreground">{tx.previousStock}</td>
-                        <td className="py-3 pr-4 text-center font-mono font-semibold text-foreground">{tx.newStock}</td>
-                        <td className="py-3">
-                          <div className="space-y-0.5">
-                            <div className="flex items-center gap-1 font-medium text-[10px] text-zinc-700 dark:text-zinc-300">
-                              <UserIcon className="size-3" />
-                              {tx.createdBy === "seeder" ? "System Seeder" : tx.createdBy}
-                            </div>
-                            {tx.reason && (
-                              <div className="flex items-center gap-1 text-[10px] text-muted-foreground italic">
-                                <NoteIcon className="size-3.5" />
-                                {tx.reason}
-                              </div>
-                            )}
+                  return (
+                    <TableRow key={tx.id}>
+                      <TableCell className="py-3 pr-4 text-zinc-500 font-mono text-[10px]">
+                        {new Date(tx.createdAt).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="py-3 pr-4 font-semibold">
+                        <Badge variant={badgeVariant} className={badgeClass}>
+                          {tx.type.replace("_", " ")}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className={`py-3 pr-4 text-center font-mono font-bold ${tx.qtyChanged > 0 ? "text-emerald-600" : "text-red-500"}`}>
+                        {tx.qtyChanged > 0 ? `+${tx.qtyChanged}` : tx.qtyChanged}
+                      </TableCell>
+                      <TableCell className="py-3 pr-4 text-center font-mono text-muted-foreground">{tx.previousStock}</TableCell>
+                      <TableCell className="py-3 pr-4 text-center font-mono font-semibold text-foreground">{tx.newStock}</TableCell>
+                      <TableCell className="py-3 whitespace-normal">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-1 font-medium text-[10px] text-zinc-700 dark:text-zinc-300">
+                            <UserIcon className="size-3" />
+                            {tx.createdBy === "seeder" ? "System Seeder" : tx.createdBy}
                           </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          {tx.reason && (
+                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground italic">
+                              <NoteIcon className="size-3.5" />
+                              {tx.reason}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>

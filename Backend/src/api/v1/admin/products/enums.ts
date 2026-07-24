@@ -55,3 +55,10 @@ export const StockTransactionType = {
 } as const
 
 export type StockTransactionType = (typeof StockTransactionType)[keyof typeof StockTransactionType]
+
+export const StockTransferDirection = {
+  APP_TO_LOCAL: "APP_TO_LOCAL",
+  LOCAL_TO_APP: "LOCAL_TO_APP",
+} as const
+
+export type StockTransferDirection = (typeof StockTransferDirection)[keyof typeof StockTransferDirection]

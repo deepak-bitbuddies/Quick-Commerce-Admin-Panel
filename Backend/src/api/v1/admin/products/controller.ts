@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from "fastify"
-import { ProductStatus } from "./enums.js"
+import { ProductStatus, StockTransferDirection } from "./enums.js"
 
 import {
   createProduct,
@@ -221,11 +221,13 @@ export async function transferStockHandler(
 ): Promise<void> {
   const { variantId } = validateSchema(adjustStockParamsSchema, request.params) as { variantId: string }
   const body = validateSchema(transferStockBodySchema, request.body) as any
-  const { direction } = (request.query as { direction: "APP_TO_LOCAL" | "LOCAL_TO_APP" })
+  const { direction } = (request.query as { direction: StockTransferDirection })
   const creator = request.user?.id || "system"
 
-  if (direction !== "APP_TO_LOCAL" && direction !== "LOCAL_TO_APP") {
-    throw new ValidationError("Direction query parameter must be 'APP_TO_LOCAL' or 'LOCAL_TO_APP'")
+  if (direction !== StockTransferDirection.APP_TO_LOCAL && direction !== StockTransferDirection.LOCAL_TO_APP) {
+    throw new ValidationError(
+      `Direction query parameter must be '${StockTransferDirection.APP_TO_LOCAL}' or '${StockTransferDirection.LOCAL_TO_APP}'`
+    )
   }
 
   const updatedVariant = await transferVariantStock(

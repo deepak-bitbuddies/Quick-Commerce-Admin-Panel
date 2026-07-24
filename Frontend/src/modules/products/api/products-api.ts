@@ -1,4 +1,5 @@
 import { api } from "@/lib/axios"
+import type { StockTransferDirection } from "../enums/stock-transfer-direction"
 import type {
   Product,
   ProductListParams,
@@ -110,7 +111,7 @@ export async function adjustVariantStock(
 
 export async function transferVariantStock(
   variantId: string,
-  input: { qty: number; direction: "APP_TO_LOCAL" | "LOCAL_TO_APP"; reason?: string; reference?: string }
+  input: { qty: number; direction: StockTransferDirection; reason?: string; reference?: string }
 ): Promise<ProductVariant> {
   const { data } = await api.post<{ data: ProductVariant }>(
     `/products/variants/${variantId}/transfer-stock`,
